@@ -431,6 +431,27 @@
   .doc-pane li{margin:3px 0}
   .doc-pane b{color:#e6f1fb}
 
+  /* 题单 */
+  .pset{position:fixed;inset:0;z-index:80;background:rgba(4,8,12,.82);backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;padding:22px}
+  .pset[hidden]{display:none}
+  .pset-box{width:min(680px,94vw);max-height:90vh;overflow:auto;background:var(--panel);
+    border:1px solid var(--line2);border-radius:16px;box-shadow:0 30px 90px rgba(0,0,0,.65);padding:16px}
+  .pset-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .pset-head b{font-size:14px}
+  .pset-head .sub{color:var(--dim);font-size:11.5px}
+  .poster-x{margin-left:auto;background:transparent;border:0;color:var(--dim);font-size:16px;padding:4px 6px;border-radius:6px}
+  .poster-x:hover{color:var(--text);background:#1b2836}
+  .pcard{border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:10px;
+    background:linear-gradient(180deg,#101a24,#0d151e)}
+  .ptitle{font-size:13px;color:#dbeaf8;font-weight:600;margin-bottom:5px}
+  .pq{font-size:12.5px;color:#a9bfd4;line-height:1.7}
+  .prow{display:flex;gap:8px;margin-top:9px}
+  .pbtn{height:26px;padding:0 11px;font-size:12px;border-radius:7px;border:1px solid var(--line);
+    background:#131f2b;color:#9fb2c6}
+  .pbtn:hover{color:var(--cyan);border-color:var(--line2)}
+  .pout{margin-top:8px;font-size:12px;color:#8fe3b0;line-height:1.7;white-space:pre-wrap}
+
   /* 二进制位 */
   .bcell rect{fill:#14202c;stroke:#2b3a49;stroke-width:1.2}
   .bcell.hi rect{fill:#2a2318;stroke:var(--amber);stroke-width:2.4}
@@ -599,6 +620,14 @@
   <button id="clinicBtn" class="clinic-btn">代码诊所</button>
 </header>
 
+<div class="pset" id="pset" hidden>
+  <div class="pset-box">
+    <div class="pset-head"><b>题单</b><span class="sub" id="psetSub"></span>
+      <button id="psetX" class="poster-x">✕</button></div>
+    <div id="psetBody"></div>
+  </div>
+</div>
+
 <div class="clinic" id="clinic" hidden>
   <div class="clinic-head">
     <b>代码诊所</b>
@@ -687,6 +716,7 @@ int main() {
     <select id="jumpKind"></select>
     <button id="jumpNext" class="tool">执行</button>
     <button id="quizBtn" class="tool">练一练</button>
+    <button id="psetBtn" class="tool">题单</button>
     <button id="cplxBtn" class="tool">复杂度</button>
     <button id="cmpBtn" class="tool">并排对比</button>
     <button id="doneBtn" class="tool">标记完成</button>
@@ -6739,6 +6769,80 @@ function graphCplxSeries(){
   return series;
 }
 
+var PROBLEMS = {
+  bub: [
+    { t:"逆序对", q:"冒泡排序的交换次数，和数组的逆序对数量是什么关系？", hint:"每次交换只消除一对相邻逆序。", ans:"恰好相等：交换次数 = 逆序对数。" },
+    { t:"提前退出", q:"数组本来就有序，加了 swapped 标记后冒泡要跑几轮？", hint:"第一轮发现没有交换。", ans:"1 轮就结束，最好情况 O(n)。" },
+    { t:"稳定性", q:"冒泡排序稳定吗？", hint:"相等时不交换。", ans:"稳定。" }
+  ],
+  bin: [
+    { t:"查找次数", q:"n = 1000 时，二分最多比较多少次？", hint:"2^10 ≈ 1024。", ans:"约 10 次，O(log n)。" },
+    { t:"边界", q:"循环写 while (l < r) 还是 while (l <= r)，取决于什么？", hint:"看区间是闭区间还是左闭右开。", ans:"取决于区间定义，两者不能混用。" },
+    { t:"溢出", q:"mid = (l + r) / 2 在 l、r 很大时有什么风险？", hint:"l + r 可能超过 int。", ans:"写成 l + (r - l) / 2 更安全。" }
+  ],
+  qk: [
+    { t:"最坏情况", q:"取末尾元素为基准，什么数据会让快排退化到 O(n²)？", hint:"已经有序。", ans:"已经有序或逆序的数组。" },
+    { t:"平均", q:"快排的平均复杂度？", hint:"每次大致平分。", ans:"O(n log n)。" },
+    { t:"稳定性", q:"快排稳定吗？", hint:"交换会跨越相同元素。", ans:"不稳定。" }
+  ],
+  mer: [
+    { t:"额外空间", q:"归并排序需要多少额外空间？", hint:"合并时要暂存。", ans:"O(n)。" },
+    { t:"稳定性", q:"归并排序稳定吗？", hint:"相等时先取左边。", ans:"稳定。" },
+    { t:"深度", q:"归并的递归深度是多少？", hint:"每次对半分。", ans:"O(log n)。" }
+  ],
+  pre: [
+    { t:"区间和", q:"用前缀和求 a[l..r] 的和，公式是什么？", hint:"做减法。", ans:"pre[r+1] - pre[l]。" },
+    { t:"预处理", q:"前缀和的预处理复杂度？", hint:"扫一遍。", ans:"O(n)。" },
+    { t:"二维", q:"二维前缀和查询一个矩形，要几项？", hint:"容斥。", ans:"四项容斥。" }
+  ],
+  k01: [
+    { t:"状态", q:"dp[i][j] 的含义是什么？", hint:"前 i 个物品、容量 j。", ans:"前 i 个物品、容量 j 能装的最大价值。" },
+    { t:"倒序", q:"一维优化时容量为什么要倒序遍历？", hint:"正序会重复用同一个物品。", ans:"保证每个物品只被用一次。" },
+    { t:"恰好装满", q:"求「恰好装满」时，dp[0] 和其余位置初始化成什么？", hint:"装不满要区分出来。", ans:"dp[0] = 0，其余 = -∞。" }
+  ],
+  dfs: [
+    { t:"顺序", q:"DFS 的访问顺序由什么决定？", hint:"看邻接表。", ans:"邻接表中边的顺序。" },
+    { t:"栈", q:"递归 DFS 深度过大有什么问题？", hint:"系统栈有限。", ans:"爆栈。" },
+    { t:"连通块", q:"统计无向图连通块，DFS 要调用几次？", hint:"每个没访问的点都要起一次。", ans:"次数 = 连通块数。" }
+  ],
+  bfs: [
+    { t:"最短路", q:"边权都是 1 时，BFS 第一次到某点的距离是什么？", hint:"逐层扩散。", ans:"最短距离。" },
+    { t:"队列", q:"BFS 把队列换成栈会变成什么？", hint:"顺序变了。", ans:"变成 DFS。" },
+    { t:"多源", q:"多源 BFS 怎么初始化？", hint:"所有源一起。", ans:"所有源点先入队，距离为 0。" }
+  ],
+  dij: [
+    { t:"负权", q:"Dijkstra 为什么不能处理负权边？", hint:"已确定的点可能被更短路径更新。", ans:"它假设取出的点已经最优。" },
+    { t:"复杂度", q:"堆优化后的复杂度？", hint:"每条边进出堆一次。", ans:"O((n + m) log n)。" },
+    { t:"过期元素", q:"为什么取出堆顶要 if (d > dist[u]) continue？", hint:"同一个点可能入堆多次。", ans:"跳过旧记录。" }
+  ],
+  top: [
+    { t:"判环", q:"拓扑排序输出的点数少于 n，说明什么？", hint:"入度减不到 0。", ans:"图里有环。" },
+    { t:"字典序", q:"要输出字典序最小的拓扑序，队列换成什么？", hint:"每次取最小的。", ans:"优先队列（小根堆）。" },
+    { t:"入度 0", q:"入度为 0 的点代表什么？", hint:"没有前置。", ans:"没有前置依赖，可以立刻做。" }
+  ]
+};
+
+function openPset(){
+  var list = PROBLEMS[app.lesson.id];
+  document.getElementById("psetSub").textContent = app.lesson.nav;
+  var body = document.getElementById("psetBody");
+  if(!list){
+    body.innerHTML = '<div class="empty">这个课时还没配题单，先用「练一练」。</div>';
+  }else{
+    var h = "";
+    for(var i=0;i<list.length;i++){
+      var p = list[i];
+      h += '<div class="pcard"><div class="ptitle">' + (i+1) + '. ' + esc(p.t) + '</div>'
+         + '<div class="pq">' + esc(p.q) + '</div>'
+         + '<div class="prow"><button class="pbtn" data-i="' + i + '" data-k="hint">提示</button>'
+         + '<button class="pbtn" data-i="' + i + '" data-k="ans">答案</button></div>'
+         + '<div class="pout" data-out="' + i + '"></div></div>';
+    }
+    body.innerHTML = h;
+  }
+  document.getElementById("pset").hidden = false;
+}
+
 function openCplx(){
   var body = document.getElementById("cplxBody");
   var kind = app.lesson.kind;
@@ -7009,6 +7113,18 @@ function bindAdvanced(){
 
   document.getElementById("jumpNext").addEventListener("click", jumpNext);
   document.getElementById("quizBtn").addEventListener("click", askQuiz);
+  document.getElementById("psetBtn").addEventListener("click", openPset);
+  document.getElementById("psetX").addEventListener("click", function(){
+    document.getElementById("pset").hidden = true;
+  });
+  document.getElementById("psetBody").addEventListener("click", function(ev){
+    var b = ev.target;
+    if(!b.classList || !b.classList.contains("pbtn")) return;
+    var i = +b.getAttribute("data-i"), k = b.getAttribute("data-k");
+    var p = PROBLEMS[app.lesson.id][i];
+    var out = document.querySelector('[data-out="' + i + '"]');
+    if(out) out.textContent = (k === "hint" ? "提示：" + p.hint : "答案：" + p.ans);
+  });
   document.getElementById("cplxBtn").addEventListener("click", openCplx);
   document.getElementById("cmpBtn").addEventListener("click", openCmp);
   document.getElementById("doneBtn").addEventListener("click", toggleDone);
@@ -7120,6 +7236,7 @@ function init(){
     openCmp();
   }
   if(p.quiz) askQuiz();
+  if(p.pset) openPset();
   if(p.hist !== undefined && p.hist !== ""){
     showHistory(parseInt(p.hist, 10), 420, 320);
   }
