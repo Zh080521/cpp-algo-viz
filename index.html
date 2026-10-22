@@ -733,6 +733,15 @@ var DAG_PRESET = {
          4:[0.60,0.50], 5:[0.88,0.19], 6:[0.88,0.81] }
 };
 
+// 带负权边的有向图：Dijkstra 会算错，Bellman-Ford 能算对
+var NEG_PRESET = {
+  n: 5,
+  dir: true,
+  edges: [[1,2,1],[1,3,2],[3,2,-2],[2,4,3],[3,4,4],[4,5,1]],
+  pos: { 1:[0.08,0.50], 2:[0.36,0.20], 3:[0.36,0.80],
+         4:[0.66,0.50], 5:[0.92,0.50] }
+};
+
 var CODE_ADJ = [
   "int n, m;",
   "cin >> n >> m;                      // 点数、边数",
@@ -1047,6 +1056,23 @@ var CODE_TRIE = [
   "}"
 ];
 
+var CODE_BELL = [
+  "vector<int> dist(n + 1, INF);",
+  "dist[s] = 0;",
+  "for (int i = 1; i < n; i++) {          // 最多 n-1 轮",
+  "    bool changed = false;",
+  "    for (auto &e : edges) {            // 每轮扫所有边",
+  "        int u = e.u, v = e.v, w = e.w;",
+  "        if (dist[u] + w < dist[v]) {",
+  "            dist[v] = dist[u] + w;",
+  "            changed = true;",
+  "        }",
+  "    }",
+  "    if (!changed) break;               // 一整轮没更新就结束",
+  "}",
+  "// 第 n 轮还能松弛 → 有负环"
+];
+
 var CODE_DIJ = [
   "const int INF = 0x3f3f3f3f;",
   "using P = pair<int,int>;",
@@ -1119,6 +1145,7 @@ var LESSONS = [
   { id:"bfs", nav:"BFS 广度优先",    sec:"图论基础", view:"graph", kind:"bfs",   code:CODE_BFS },
   { id:"top", nav:"拓扑排序",        sec:"图论基础", view:"graph", kind:"topo",  data:"dag", code:CODE_TOPO },
   { id:"dij", nav:"Dijkstra 最短路", sec:"进阶",     view:"graph", kind:"dij",   code:CODE_DIJ },
+  { id:"bell", nav:"Bellman-Ford",  sec:"进阶",     view:"graph", kind:"bell",  data:"neg", code:CODE_BELL },
   { id:"fly", nav:"Floyd 多源最短路", sec:"进阶",    view:"dp",    kind:"floyd", code:CODE_FLOYD },
   { id:"kru", nav:"Kruskal 生成树",  sec:"进阶",     view:"graph", kind:"kru",   code:CODE_KRU }
 ];
@@ -1250,6 +1277,18 @@ function randomDAG(){
     pos[v] = [0.07 + (v - 1) * (0.86 / (n - 1)), 0.5 + ((v % 3) - 1) * 0.28];
   }
   return { n:n, dir:true, edges:edges, pos:pos };
+}
+
+function randomNeg(){
+  var e = [
+    [1, 2, 1 + Math.floor(Math.random() * 4)],
+    [1, 3, 2 + Math.floor(Math.random() * 4)],
+    [3, 2, -1 - Math.floor(Math.random() * 3)],
+    [2, 4, 2 + Math.floor(Math.random() * 4)],
+    [3, 4, 3 + Math.floor(Math.random() * 5)],
+    [4, 5, 1 + Math.floor(Math.random() * 4)]
+  ];
+  return { n:5, dir:true, edges:e, pos:NEG_PRESET.pos };
 }
 
 function randomGraph(){
@@ -2305,6 +2344,46 @@ function simTrie(data){
   return steps;
 }
 
+function simBell(g){
+  var steps = [];
+  function push(line, note, events){ steps.push({line:line, note:note||"", events:events||[]}); }
+  var n = g.n, edges = g.edges;
+  var dist = {};
+  for(var v=1; v<=n; v++) dist[v] = Infinity;
+
+  function num(x){ return x === Infinity ? "∞" : String(x); }
+
+  push(0, "所有点的 dist 先设成 ∞，起点的 dist 是 0", []);
+  dist[1] = 0;
+  push(1, "dist[1] = 0", [{t:"dist", u:1, val:0}]);
+
+  for(var i=1; i<n; i++){
+    push(2, "第 " + i + " 轮：把所有边都检查一遍", [{t:"round", i:i}]);
+    var changed = false;
+    for(var k=0; k<edges.length; k++){
+      var e = edges[k], u = e[0], v = e[1], w = e[2];
+      push(4, "看边 " + u + " → " + v + "（权重 " + w + "）", [{t:"hi", u:u, v:v}]);
+      if(dist[u] + w < dist[v]){
+        dist[v] = dist[u] + w;
+        push(7, "dist[" + v + "] 可以更小：" + num(dist[u]) + " + (" + w + ") = " + dist[v],
+             [{t:"dist", u:v, val:dist[v]}]);
+        changed = true;
+      }else{
+        push(6, "dist[" + u + "] + " + w + " = " + num(dist[u] + w) + "，不比 " + num(dist[v]) + " 小，跳过");
+      }
+    }
+    if(!changed){
+      push(11, "这一轮没有任何更新，说明已经收敛，提前结束", []);
+      break;
+    }
+  }
+
+  var parts = [];
+  for(var v=1; v<=n; v++) parts.push(v + ":" + num(dist[v]));
+  push(13, "最终 dist —— " + parts.join("  "), []);
+  return steps;
+}
+
 function buildSteps(lesson, g, arr){
   if(lesson.kind === "bubble") return simBubble(arr);
   if(lesson.kind === "binary") return simBinary(arr);
@@ -2326,6 +2405,7 @@ function buildSteps(lesson, g, arr){
   if(lesson.kind === "store") return simStore(g, lesson.mode);
   if(lesson.kind === "dfs") return simDFS(g);
   if(lesson.kind === "dij") return simDijkstra(g);
+  if(lesson.kind === "bell") return simBell(g);
   if(lesson.kind === "kru") return simKruskal(g);
   if(lesson.kind === "topo") return simTopo(g);
   return simBFS(g);
@@ -2348,7 +2428,7 @@ function makeState(lesson, g, arr){
     ptrs: {}, pivot: null, found: null, ranges: [], target: null,
     aux: [], auxHi: -1, auxHi2: -1, query: null,
     mstack: [], ans: new Map(),
-    harr: [], hcur: 0, calls: [],
+    harr: [], hcur: 0, calls: [], round: 0,
     topArr: [], patArr: [], nxtArr: [], ti: -1, pj: 0, hit: -1, topIsText: false,
     tr: {}, curP: 0, marks: {},
     nodes: [], curNode: 0,
@@ -2370,7 +2450,7 @@ function makeState(lesson, g, arr){
       st.edges.push({u:g.edges[i][0], v:g.edges[i][1], w:g.edges[i][2]});
     }
   }
-  if(lesson.kind === "dij"){
+  if(lesson.kind === "dij" || lesson.kind === "bell"){
     for(var v=1; v<=g.n; v++) st.dist.set(v, Infinity);
   }
   if(lesson.kind === "kru"){
@@ -2436,6 +2516,9 @@ function applyEvents(st, evs){
         break;
       case "dist":
         st.dist.set(e.u, e.val);
+        break;
+      case "round":
+        st.round = e.i;
         break;
       case "cur":
         st.cur = e.u;
@@ -3059,7 +3142,7 @@ function renderGraph(st, g, fresh, lesson){
            + ' L' + (bx - px*4.2) + ' ' + (by - py*4.2) + ' Z"/>';
     }
     var mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-    if(!g.dir) out += '<text class="wlabel" x="' + mx + '" y="' + (my - 7) + '" text-anchor="middle">' + e.w + '</text>';
+    if(!g.dir || (lesson && lesson.kind === "bell")) out += '<text class="wlabel" x="' + mx + '" y="' + (my - 7) + '" text-anchor="middle">' + e.w + '</text>';
   }
 
   for(var v=1; v<=n; v++){
@@ -3071,7 +3154,7 @@ function renderGraph(st, g, fresh, lesson){
         +  '<circle cx="' + X(v) + '" cy="' + Y(v) + '" r="17"/>'
         +  (CAT.on ? catEars(X(v), Y(v), 17) : '')
         +  '<text x="' + X(v) + '" y="' + Y(v) + '" dy="0.35em" text-anchor="middle">' + v + '</text>';
-    if(lesson && lesson.kind === "dij"){
+    if(lesson && (lesson.kind === "dij" || lesson.kind === "bell")){
       var dv = st.dist.get(v);
       var lbl = (dv === Infinity ? "∞" : String(dv));
       var lw = 10 + lbl.length * 6.6;
@@ -3193,6 +3276,23 @@ function bfsHTML(st){
   h += '</div>';
 
   h += '<div class="sub">访问顺序</div><div class="val">' + orderHTML(st) + '</div>';
+  return h;
+}
+
+function bellHTML(st){
+  var n = st.n || 0;
+  var h = '<div class="sub">dist 数组</div><div class="grid-chips">';
+  for(var v=1; v<=n; v++){
+    var d = st.dist.get(v);
+    h += '<span class="kv">' + v + '<b>' + (d === Infinity ? "∞" : d) + '</b></span>';
+  }
+  h += '</div>';
+  h += '<div class="sub">当前轮次</div><div class="grid-chips">'
+     + '<span class="kv">第<b>' + (st.round || 0) + '</b>轮</span></div>';
+  h += '<div class="sub">核心</div><div class="formula">'
+     + 'dist[v] = min(dist[v], dist[u] + w)<br><br>'
+     + '每轮把所有边扫一遍，<br>最多 n-1 轮一定收敛。<br><br>'
+     + '负权边它不怕；<br>再扫一轮还能更新 → 有负环。</div>';
   return h;
 }
 
@@ -3591,6 +3691,9 @@ function renderStruct(st, lesson, fresh, data){
   }else if(lesson.kind === "dij"){
     title.textContent = "dist 与小根堆";
     el.innerHTML = dijHTML(st, fresh);
+  }else if(lesson.kind === "bell"){
+    title.textContent = "dist 与轮次";
+    el.innerHTML = bellHTML(st);
   }else if(lesson.kind === "kru"){
     title.textContent = "边表与并查集";
     el.innerHTML = kruHTML(st, fresh);
@@ -3789,6 +3892,7 @@ var app = {
   lessonIndex: 0,
   graph: JSON.parse(JSON.stringify(PRESET)),
   dag: JSON.parse(JSON.stringify(DAG_PRESET)),
+  neg: JSON.parse(JSON.stringify(NEG_PRESET)),
   array: null,
   lesson: null,
   steps: [],
@@ -3798,7 +3902,10 @@ var app = {
 };
 
 function curGraph(){
-  return (app.lesson && app.lesson.data === "dag") ? app.dag : app.graph;
+  if(!app.lesson) return app.graph;
+  if(app.lesson.data === "dag") return app.dag;
+  if(app.lesson.data === "neg") return app.neg;
+  return app.graph;
 }
 
 function rebuild(keepCursor){
@@ -4024,6 +4131,7 @@ function bind(){
   document.getElementById("btnRandom").addEventListener("click", function(){
     stopPlay();
     if(app.lesson.data === "dag") app.dag = randomDAG();
+    else if(app.lesson.data === "neg") app.neg = randomNeg();
     else if(app.lesson.view === "graph") app.graph = randomGraph();
     else app.array = randomData(app.lesson);
     rebuild(false);
@@ -4031,6 +4139,7 @@ function bind(){
   document.getElementById("btnPreset").addEventListener("click", function(){
     stopPlay();
     if(app.lesson.data === "dag") app.dag = JSON.parse(JSON.stringify(DAG_PRESET));
+    else if(app.lesson.data === "neg") app.neg = JSON.parse(JSON.stringify(NEG_PRESET));
     else if(app.lesson.view === "graph") app.graph = JSON.parse(JSON.stringify(PRESET));
     else app.array = defaultData(app.lesson);
     rebuild(false);
