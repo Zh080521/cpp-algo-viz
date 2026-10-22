@@ -1192,6 +1192,115 @@ var CODE_FLOW = [
   "}"
 ];
 
+// 并查集：三组朋友关系
+var DSU_PRESET = {
+  n: 6,
+  edges: [[1,2],[2,3],[4,5]],
+  pos: { 1:[0.10,0.28], 2:[0.36,0.16], 3:[0.28,0.62],
+         4:[0.62,0.30], 5:[0.74,0.68], 6:[0.90,0.22] }
+};
+
+var CODE_RECUR = [
+  "vector<int> f(n + 1, 0);",
+  "f[0] = 1;",
+  "f[1] = 1;",
+  "for (int i = 2; i <= n; i++)",
+  "    f[i] = f[i - 1] + f[i - 2];",
+  "// 答案：f[n]"
+];
+
+var CODE_ROB = [
+  "vector<int> dp(n + 1, 0);",
+  "dp[1] = a[0];",
+  "for (int i = 2; i <= n; i++)",
+  "    dp[i] = max(dp[i - 1], dp[i - 2] + a[i - 1]);",
+  "// 答案：dp[n]"
+];
+
+var CODE_TWOPTR = [
+  "int l = 0, r = n - 1;",
+  "while (l < r) {",
+  "    int s = a[l] + a[r];",
+  "    if (s == target) return {l, r};",
+  "    if (s < target) l++;",
+  "    else r--;",
+  "}",
+  "return {-1, -1};"
+];
+
+var CODE_SLIDE = [
+  "int l = 0, sum = 0, best = INF;",
+  "for (int r = 0; r < n; r++) {",
+  "    sum += a[r];",
+  "    while (sum >= S) {",
+  "        best = min(best, r - l + 1);",
+  "        sum -= a[l]; l++;",
+  "    }",
+  "}"
+];
+
+var CODE_SIEVE = [
+  "vector<int> isPrime(n + 1, 1);",
+  "isPrime[0] = isPrime[1] = 0;",
+  "for (int i = 2; i * i <= n; i++) {",
+  "    if (!isPrime[i]) continue;",
+  "    for (int j = i * i; j <= n; j += i)",
+  "        isPrime[j] = 0;",
+  "}",
+  "// 没被筛掉的都是质数"
+];
+
+var CODE_DSU = [
+  "vector<int> fa(n + 1), sz(n + 1, 1);",
+  "for (int i = 1; i <= n; i++) fa[i] = i;",
+  "int find(int x) {",
+  "    while (fa[x] != x) x = fa[x] = fa[fa[x]];  // 路径压缩",
+  "    return x;",
+  "}",
+  "void merge(int a, int b) {",
+  "    a = find(a); b = find(b);",
+  "    if (a == b) return;",
+  "    if (sz[a] < sz[b]) swap(a, b);",
+  "    fa[b] = a; sz[a] += sz[b];",
+  "}"
+];
+
+var CODE_LIS = [
+  "vector<int> dp(n, 1);",
+  "int ans = 1;",
+  "for (int i = 0; i < n; i++) {",
+  "    for (int j = 0; j < i; j++)",
+  "        if (a[j] < a[i]) dp[i] = max(dp[i], dp[j] + 1);",
+  "    ans = max(ans, dp[i]);",
+  "}"
+];
+
+var CODE_LCS = [
+  "vector<vector<int>> dp(n + 1, vector<int>(m + 1, 0));",
+  "for (int i = 1; i <= n; i++)",
+  "    for (int j = 1; j <= m; j++) {",
+  "        if (a[i - 1] == b[j - 1])",
+  "            dp[i][j] = dp[i - 1][j - 1] + 1;",
+  "        else",
+  "            dp[i][j] = max(dp[i-1][j], dp[i][j-1]);",
+  "    }",
+  "// 答案：dp[n][m]"
+];
+
+var CODE_MKNAP = [
+  "vector<vector<int>> dp(n + 1, vector<int>(W + 1, 0));",
+  "for (int i = 1; i <= n; i++) {",
+  "    int w = items[i-1].w, v = items[i-1].v, c = items[i-1].c;",
+  "    for (int j = 0; j <= W; j++) {",
+  "        dp[i][j] = dp[i-1][j];",
+  "        for (int k = 1; k <= c && k * w <= j; k++) {",
+  "            int cand = dp[i-1][j-k*w] + k*v;",
+  "            dp[i][j] = max(dp[i][j], cand);",
+  "        }",
+  "    }",
+  "}"
+];
+
 var CODE_DIJ = [
   "const int INF = 0x3f3f3f3f;",
   "using P = pair<int,int>;",
@@ -1247,15 +1356,24 @@ var LESSONS = [
   { id:"mer", nav:"归并排序",        sec:"基础",     view:"array", kind:"merge",  code:CODE_MERGE },
   { id:"pre", nav:"前缀和",          sec:"基础",     view:"array", kind:"prefix", code:CODE_PRE },
   { id:"dif", nav:"差分",            sec:"基础",     view:"array", kind:"diff",   code:CODE_DIFF },
+  { id:"recur", nav:"递推 · 爬楼梯",  sec:"基础",     view:"array", kind:"recur",  code:CODE_RECUR },
+  { id:"twoptr", nav:"双指针",        sec:"基础",     view:"array", kind:"twoptr", code:CODE_TWOPTR },
+  { id:"slide", nav:"滑动窗口",       sec:"基础",     view:"array", kind:"slide",  code:CODE_SLIDE },
+  { id:"sieve", nav:"质数筛",         sec:"数学",     view:"array", kind:"sieve",  code:CODE_SIEVE },
   { id:"k01", nav:"01 背包",         sec:"动态规划", view:"dp",    kind:"knap01", code:CODE_KNAP01 },
   { id:"kfc", nav:"完全背包",        sec:"动态规划", view:"dp",    kind:"knapfull", code:CODE_KNAPFULL },
   { id:"memo", nav:"记忆化搜索",     sec:"动态规划", view:"array", kind:"memo",   code:CODE_MEMO },
   { id:"idp", nav:"区间 DP · 石子合并", sec:"动态规划", view:"dp", kind:"idp",    code:CODE_IDP },
+  { id:"rob", nav:"打家劫舍",        sec:"动态规划", view:"array", kind:"rob",   code:CODE_ROB },
+  { id:"lis", nav:"最长上升子序列",   sec:"动态规划", view:"array", kind:"lis",   code:CODE_LIS },
+  { id:"lcs", nav:"最长公共子序列",   sec:"动态规划", view:"dp",    kind:"lcs",   code:CODE_LCS },
+  { id:"mknap", nav:"多重背包",      sec:"动态规划", view:"dp",    kind:"mknap", code:CODE_MKNAP },
   { id:"mono", nav:"单调栈",         sec:"数据结构", view:"array", kind:"mono",   code:CODE_MONO },
   { id:"heap", nav:"堆",             sec:"数据结构", view:"heap",  kind:"heap",   code:CODE_HEAP },
   { id:"bit", nav:"树状数组",        sec:"数据结构", view:"array", kind:"bit",    code:CODE_BIT },
   { id:"seg", nav:"线段树",          sec:"数据结构", view:"segtree", kind:"seg",  code:CODE_SEG },
   { id:"trie", nav:"Trie 字典树",    sec:"数据结构", view:"trie",  kind:"trie",  code:CODE_TRIE },
+  { id:"dsu", nav:"并查集",          sec:"数据结构", view:"graph", kind:"dsu",   data:"dsu", code:CODE_DSU },
   { id:"kmp", nav:"KMP 字符串匹配",  sec:"字符串",   view:"string", kind:"kmp",   code:CODE_KMP },
   { id:"adj", nav:"存图 · 邻接表",   sec:"图论基础", view:"graph", kind:"store", mode:"adj", code:CODE_ADJ },
   { id:"mat", nav:"存图 · 邻接矩阵", sec:"图论基础", view:"graph", kind:"store", mode:"mat", code:CODE_MAT },
@@ -1286,6 +1404,14 @@ function defaultData(lesson){
   if(lesson.kind === "bit") return { values:[3,1,4,1,5,9,2,6] };
   if(lesson.kind === "seg") return { values:[5,3,8,1,9,2,7,4] };
   if(lesson.kind === "trie") return { words:["app","apple","apply","apt"] };
+  if(lesson.kind === "recur") return { n:10 };
+  if(lesson.kind === "rob") return { values:[2,7,9,3,1] };
+  if(lesson.kind === "twoptr") return { values:[1,2,3,4,6,8,9,12], target:11 };
+  if(lesson.kind === "slide") return { values:[2,3,1,2,4,3], S:7 };
+  if(lesson.kind === "sieve") return { n:30 };
+  if(lesson.kind === "lis") return { values:[10,9,2,5,3,7,101,18] };
+  if(lesson.kind === "lcs") return { a:"ABCBDAB", b:"BDCABA" };
+  if(lesson.kind === "mknap") return { W:8, items:[[2,3,2],[3,4,1],[4,5,2]] };
   if(lesson.kind === "memo") return { values:[0,0,0,0,0,0,0,0,0], top:8 };
   if(lesson.kind === "heap") return { values:[5,3,8,1,9,2,7] };
   if(lesson.view === "dp") return { W:8, items:[[2,3],[3,4],[4,5],[5,6]] };
@@ -1310,6 +1436,36 @@ function randomData(lesson){
     return { values:arrs };
   }
   if(lesson.kind === "trie") return { words:["app","apple","apply","apt"] };
+  if(lesson.kind === "recur") return { n:8 + Math.floor(Math.random() * 5) };
+  if(lesson.kind === "rob"){
+    var rv = [];
+    for(var i=0;i<5;i++) rv.push(1 + Math.floor(Math.random() * 9));
+    return { values:rv };
+  }
+  if(lesson.kind === "twoptr"){
+    var tv = [];
+    for(var i=0;i<8;i++) tv.push(1 + Math.floor(Math.random() * 15));
+    tv.sort(function(a,b){ return a - b; });
+    var ti = Math.floor(Math.random() * 6), tj = ti + 1 + Math.floor(Math.random() * 2);
+    return { values:tv, target:tv[ti] + tv[tj] };
+  }
+  if(lesson.kind === "slide"){
+    var sv = [];
+    for(var i=0;i<6;i++) sv.push(1 + Math.floor(Math.random() * 4));
+    return { values:sv, S:5 + Math.floor(Math.random() * 6) };
+  }
+  if(lesson.kind === "sieve") return { n:24 + Math.floor(Math.random() * 17) };
+  if(lesson.kind === "lis"){
+    var lv = [];
+    for(var i=0;i<8;i++) lv.push(1 + Math.floor(Math.random() * 20));
+    return { values:lv };
+  }
+  if(lesson.kind === "lcs") return { a:"ABCBDAB", b:"BDCABA" };
+  if(lesson.kind === "mknap"){
+    var mi = [];
+    for(var i=0;i<3;i++) mi.push([2 + Math.floor(Math.random()*3), 2 + Math.floor(Math.random()*4), 1 + Math.floor(Math.random()*2)]);
+    return { W:8, items:mi };
+  }
   if(lesson.kind === "floyd"){
     var edges = [[0,1,2+Math.floor(Math.random()*6)],[0,2,1+Math.floor(Math.random()*6)]];
     edges.push([1,3,1+Math.floor(Math.random()*6)]);
@@ -2758,6 +2914,258 @@ function simFlow(g){
   return steps;
 }
 
+function simRecur(data){
+  var steps = [];
+  function push(line, note, events){ steps.push({line:line, note:note||"", events:events||[]}); }
+  var n = (data && data.n) || 10;
+  var f = new Array(n + 1).fill(0);
+  push(0, "f[i]：走到第 i 级台阶有多少种走法（一次 1 级或 2 级）",
+       [{t:"arrInit", values:f.slice()}]);
+  f[0] = 1;
+  push(1, "f[0] = 1：站着不动也是一种走法", [{t:"setMain", i:0, v:1}]);
+  f[1] = 1;
+  push(2, "f[1] = 1：只能迈一步", [{t:"setMain", i:1, v:1}]);
+  for(var i=2; i<=n; i++){
+    f[i] = f[i-1] + f[i-2];
+    push(4, "f[" + i + "] = f[" + (i-1) + "] + f[" + (i-2) + "] = " + f[i],
+         [{t:"cmp", i:i-1, j:i-2}, {t:"setMain", i:i, v:f[i]}]);
+  }
+  push(5, "答案 f[" + n + "] = " + f[n], [{t:"found", i:n}]);
+  return steps;
+}
+
+function simRob(data){
+  var steps = [];
+  function push(line, note, events){ steps.push({line:line, note:note||"", events:events||[]}); }
+  var a = (data && data.values) || [2,7,9,3,1];
+  var n = a.length;
+  push(0, "dp[i]：从前 i 户里能偷到的最大金额（不能偷相邻的）",
+       [{t:"arrInit", values:a.slice()}, {t:"auxInit", n:n}]);
+  var dp = new Array(n + 1).fill(0);
+  dp[1] = a[0];
+  push(2, "dp[1] = a[0] = " + a[0], [{t:"auxSet", i:0, v:a[0]}]);
+  for(var i=2; i<=n; i++){
+    var skip = dp[i-1], take = dp[i-2] + a[i-1];
+    dp[i] = Math.max(skip, take);
+    push(3, "第 " + i + " 户：偷 = " + dp[i-2] + " + " + a[i-1] + " = " + take
+         + "，不偷 = " + skip + "，取 " + dp[i],
+         [{t:"cmp", i:i-1, j:i-2}, {t:"auxSet", i:i-1, v:dp[i]}]);
+  }
+  push(4, "答案 dp[" + n + "] = " + dp[n], [{t:"found", i:n-1}]);
+  return steps;
+}
+
+function simTwoPtr(data){
+  var steps = [];
+  function push(line, note, events){ steps.push({line:line, note:note||"", events:events||[]}); }
+  var a = (data && data.values) || [1,2,3,4,6,8,9,12];
+  var target = (data && data.target) || 11;
+  var n = a.length, l = 0, r = n - 1;
+  push(0, "数组有序，左右各放一个指针，从两端往中间收", [{t:"ptr", name:"lo", i:l}, {t:"ptr", name:"hi", i:r}]);
+  while(l < r){
+    var s = a[l] + a[r];
+    push(2, "a[" + l + "] + a[" + r + "] = " + a[l] + " + " + a[r] + " = " + s,
+         [{t:"cmp", i:l, j:r}, {t:"ptr", name:"lo", i:l}, {t:"ptr", name:"hi", i:r}]);
+    if(s === target){
+      push(3, "正好等于 " + target + "，找到了", [{t:"found", i:l}, {t:"sorted", i:r}]);
+      return steps;
+    }
+    if(s < target){
+      l++;
+      push(4, "和太小，左指针右移", [{t:"ptr", name:"lo", i:l}, {t:"ptr", name:"hi", i:r}]);
+    }else{
+      r--;
+      push(5, "和太大，右指针左移", [{t:"ptr", name:"lo", i:l}, {t:"ptr", name:"hi", i:r}]);
+    }
+  }
+  push(7, "没有找到", []);
+  return steps;
+}
+
+function simSlide(data){
+  var steps = [];
+  function push(line, note, events){ steps.push({line:line, note:note||"", events:events||[]}); }
+  var a = (data && data.values) || [2,3,1,2,4,3];
+  var S = (data && data.S) || 7;
+  var n = a.length, l = 0, sum = 0, best = Infinity;
+  push(0, "求和 ≥ " + S + " 的最短连续子数组", [{t:"arrInit", values:a.slice()}]);
+  for(var r=0; r<n; r++){
+    sum += a[r];
+    push(2, "右指针移到 " + r + "，sum = " + sum,
+         [{t:"window", lo:l, hi:r}, {t:"ptr", name:"hi", i:r}, {t:"ptr", name:"lo", i:l}]);
+    while(sum >= S){
+      best = Math.min(best, r - l + 1);
+      push(4, "sum 够了，长度 " + (r-l+1) + "，目前最短 " + best,
+           [{t:"window", lo:l, hi:r}, {t:"found", i:l}]);
+      sum -= a[l]; l++;
+      push(5, "左指针右移，sum = " + sum,
+           [{t:"window", lo:l, hi:r}, {t:"ptr", name:"lo", i:l}, {t:"ptr", name:"hi", i:r}]);
+    }
+  }
+  push(7, best === Infinity ? "没有满足条件的子数组" : "答案：最短长度 " + best, []);
+  return steps;
+}
+
+function simSieve(data){
+  var steps = [];
+  function push(line, note, events){ steps.push({line:line, note:note||"", events:events||[]}); }
+  var n = (data && data.n) || 30;
+  var isP = new Array(n + 1).fill(1);
+  isP[0] = 0; isP[1] = 0;
+  var values = [];
+  for(var i=0; i<=n; i++) values.push(i);
+  push(0, "先假设 0.." + n + " 全是质数", [{t:"arrInit", values:values}]);
+  push(1, "0 和 1 不是质数，先划掉", [{t:"dim", i:0}, {t:"dim", i:1}]);
+  for(var i=2; i*i<=n; i++){
+    if(!isP[i]){ push(3, i + " 已经被筛掉了，跳过"); continue; }
+    push(2, "i = " + i + "，把它的倍数全划掉", [{t:"found", i:i}]);
+    for(var j=i*i; j<=n; j+=i){
+      if(isP[j]){
+        isP[j] = 0;
+        push(5, "划掉 " + j + "（" + i + " × " + (j/i) + "）", [{t:"dim", i:j}, {t:"cmp", i:i, j:j}]);
+      }
+    }
+  }
+  var primes = [], evs = [];
+  for(var i=2; i<=n; i++) if(isP[i]){ primes.push(i); evs.push({t:"sorted", i:i}); }
+  push(7, "剩下的质数：" + primes.join(" "), evs);
+  return steps;
+}
+
+function simDsu(g){
+  var steps = [];
+  function push(line, note, events){ steps.push({line:line, note:note||"", events:events||[]}); }
+  var n = g.n, edges = g.edges;
+  var fa = {}, sz = {};
+  for(var i=1; i<=n; i++){ fa[i] = i; sz[i] = 1; }
+  function find(x){
+    while(fa[x] !== x){ fa[x] = fa[fa[x]]; x = fa[x]; }
+    return x;
+  }
+  function paint(){
+    var evs = [];
+    for(var x=1; x<=n; x++) evs.push({t:"color", u:x, c:find(x) - 1});
+    return evs;
+  }
+  push(0, "每个人一开始各自一伙，fa[i] = i", [{t:"dsuInit", n:n}]);
+  push(1, "初始化：fa[i] = i", paint());
+
+  for(var k=0; k<edges.length; k++){
+    var u = edges[k][0], v = edges[k][1];
+    push(6, "把 " + u + " 和 " + v + " 并到一起", [{t:"hi", u:u, v:v}]);
+    var ru = find(u), rv = find(v);
+    push(2, "find(" + u + ") = " + ru + "，find(" + v + ") = " + rv, [{t:"cur", u:u}]);
+    if(ru === rv){
+      push(8, "它们本来就在同一伙，不用合并");
+    }else{
+      if(sz[ru] < sz[rv]){ var t = ru; ru = rv; rv = t; }
+      fa[rv] = ru; sz[ru] += sz[rv];
+      push(11, "小团体挂到大团体下：fa[" + rv + "] = " + ru + "，人数 " + sz[ru],
+           [{t:"hi", u:ru, v:rv}, {t:"setParent", x:rv, p:ru}, {t:"setSize", x:ru, s:sz[ru]}]);
+      push(11, "重新给同一伙的人上同一种颜色", paint());
+    }
+  }
+  var roots = {};
+  for(var x=1; x<=n; x++) roots[find(x)] = 1;
+  push(11, "最后分成 " + Object.keys(roots).length + " 伙", [{t:"cur", u:0}]);
+  return steps;
+}
+
+function simLis(data){
+  var steps = [];
+  function push(line, note, events){ steps.push({line:line, note:note||"", events:events||[]}); }
+  var a = (data && data.values) || [10,9,2,5,3,7,101,18];
+  var n = a.length;
+  var dp = new Array(n).fill(1);
+  push(0, "dp[i]：以 a[i] 结尾的最长上升子序列长度", [{t:"arrInit", values:a.slice()}, {t:"auxInit", n:n}]);
+  var evs = [];
+  for(var i=0; i<n; i++){ dp[i] = 1; evs.push({t:"auxSet", i:i, v:1}); }
+  push(1, "每个位置至少是自己，长度 1", evs);
+  var ans = 1;
+  for(var i=0; i<n; i++){
+    for(var j=0; j<i; j++){
+      if(a[j] < a[i]){
+        var cand = dp[j] + 1;
+        push(4, "a[" + j + "] < a[" + i + "]：dp[" + i + "] = max(" + dp[i] + ", " + dp[j] + " + 1) = "
+             + Math.max(dp[i], cand), [{t:"cmp", i:j, j:i}]);
+        if(cand > dp[i]){
+          dp[i] = cand;
+          push(4, "更新 dp[" + i + "] = " + dp[i], [{t:"auxSet", i:i, v:dp[i]}, {t:"found", i:i}]);
+        }
+      }
+    }
+    if(dp[i] > ans){ ans = dp[i]; push(5, "目前最长是 " + ans, []); }
+  }
+  push(6, "答案：最长上升子序列长度 " + ans, []);
+  return steps;
+}
+
+function simLcs(arr){
+  var steps = [];
+  function push(line, note, events){ steps.push({line:line, note:note||"", events:events||[]}); }
+  var A = (arr && arr.a) || "ABCBDAB";
+  var B = (arr && arr.b) || "BDCABA";
+  var n = A.length, m = B.length;
+  var dp = [];
+  for(var i=0;i<=n;i++){ var row=[]; for(var j=0;j<=m;j++) row.push(0); dp.push(row); }
+  push(0, "dp[i][j]：a 的前 i 个和 b 的前 j 个的最长公共子序列",
+       [{t:"gridInit", rows:n+1, cols:m+1}]);
+  var z = [];
+  for(var j=0;j<=m;j++) z.push({t:"cell", i:0, j:j, v:0});
+  for(var i=1;i<=n;i++) z.push({t:"cell", i:i, j:0, v:0});
+  push(0, "第一行、第一列都是 0（有一边是空串）", z);
+  for(var i=1;i<=n;i++){
+    for(var j=1;j<=m;j++){
+      if(A[i-1] === B[j-1]){
+        dp[i][j] = dp[i-1][j-1] + 1;
+        push(4, "a[" + (i-1) + "] = b[" + (j-1) + "] = '" + A[i-1] + "'，取左上 + 1 = " + dp[i][j],
+             [{t:"focus", i:i, j:j}, {t:"deps", cells:[[i-1,j-1]]}, {t:"cell", i:i, j:j, v:dp[i][j]}]);
+      }else{
+        dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+        push(6, "不相等，取上面和左边的较大值 = " + dp[i][j],
+             [{t:"focus", i:i, j:j}, {t:"deps", cells:[[i-1,j],[i,j-1]]}, {t:"cell", i:i, j:j, v:dp[i][j]}]);
+      }
+    }
+  }
+  push(8, "答案 dp[" + n + "][" + m + "] = " + dp[n][m], [{t:"dpClear"}]);
+  return steps;
+}
+
+function simMknap(arr){
+  var steps = [];
+  function push(line, note, events){ steps.push({line:line, note:note||"", events:events||[]}); }
+  var items = (arr && arr.items) || [[2,3,2],[3,4,1],[4,5,2]];
+  var W = (arr && arr.W) || 8;
+  var n = items.length;
+  var dp = [];
+  for(var i=0;i<=n;i++){ var row=[]; for(var j=0;j<=W;j++) row.push(0); dp.push(row); }
+  push(0, "dp[i][j]：前 i 种物品、容量 j 能装的最大价值（每种有数量上限）",
+       [{t:"gridInit", rows:n+1, cols:W+1}]);
+  var z = [];
+  for(var j=0;j<=W;j++) z.push({t:"cell", i:0, j:j, v:0});
+  push(0, "没有物品时价值都是 0", z);
+
+  for(var i=1;i<=n;i++){
+    var w = items[i-1][0], v = items[i-1][1], c = items[i-1][2];
+    push(1, "第 " + i + " 种：重量 " + w + "，价值 " + v + "，最多 " + c + " 个");
+    for(var j=0;j<=W;j++){
+      dp[i][j] = dp[i-1][j];
+      push(4, "j = " + j + "：先继承 dp[" + (i-1) + "][" + j + "] = " + dp[i][j],
+           [{t:"focus", i:i, j:j}, {t:"deps", cells:[[i-1,j]]}, {t:"cell", i:i, j:j, v:dp[i][j]}]);
+      for(var k=1; k<=c && k*w<=j; k++){
+        var cand = dp[i-1][j-k*w] + k*v;
+        if(cand > dp[i][j]){
+          dp[i][j] = cand;
+          push(7, "装 " + k + " 个：" + dp[i-1][j-k*w] + " + " + (k*v) + " = " + cand + "，更优",
+               [{t:"deps", cells:[[i-1,j-k*w]]}, {t:"cell", i:i, j:j, v:cand}]);
+        }
+      }
+    }
+  }
+  push(10, "答案 dp[" + n + "][" + W + "] = " + dp[n][W], [{t:"dpClear"}]);
+  return steps;
+}
+
 function buildSteps(lesson, g, arr){
   if(lesson.kind === "bubble") return simBubble(arr);
   if(lesson.kind === "binary") return simBinary(arr);
@@ -2785,6 +3193,15 @@ function buildSteps(lesson, g, arr){
   if(lesson.kind === "bip") return simBip(g);
   if(lesson.kind === "scc") return simScc(g);
   if(lesson.kind === "flow") return simFlow(g);
+  if(lesson.kind === "dsu") return simDsu(g);
+  if(lesson.kind === "recur") return simRecur(arr);
+  if(lesson.kind === "rob") return simRob(arr);
+  if(lesson.kind === "twoptr") return simTwoPtr(arr);
+  if(lesson.kind === "slide") return simSlide(arr);
+  if(lesson.kind === "sieve") return simSieve(arr);
+  if(lesson.kind === "lis") return simLis(arr);
+  if(lesson.kind === "lcs") return simLcs(arr);
+  if(lesson.kind === "mknap") return simMknap(arr);
   if(lesson.kind === "kru") return simKruskal(g);
   if(lesson.kind === "topo") return simTopo(g);
   return simBFS(g);
@@ -2808,7 +3225,7 @@ function makeState(lesson, g, arr){
     aux: [], auxHi: -1, auxHi2: -1, query: null,
     mstack: [], ans: new Map(),
     harr: [], hcur: 0, calls: [], round: 0, colors: new Map(), lows: new Map(),
-    flow: new Map(), maxflow: 0,
+    flow: new Map(), maxflow: 0, dimSet: new Set(),
     topArr: [], patArr: [], nxtArr: [], ti: -1, pj: 0, hit: -1, topIsText: false,
     tr: {}, curP: 0, marks: {},
     nodes: [], curNode: 0,
@@ -2914,6 +3331,9 @@ function applyEvents(st, evs){
         break;
       case "mflow":
         st.maxflow = e.v;
+        break;
+      case "dim":
+        st.dimSet.add(e.i);
         break;
       case "cur":
         st.cur = e.u;
@@ -3275,6 +3695,7 @@ function renderArray(st, lesson){
     if(st.swap && (st.swap[0] === i || st.swap[1] === i)) cls += " swap";
     if(st.found === i) cls += " found";
     if(st.window && (i < st.window[0] || i > st.window[1])) cls += " out";
+    if(st.dimSet && st.dimSet.has(i)) cls += " out";
     out += '<rect class="' + cls + '" data-i="' + i + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="3"/>';
     if(CAT.on){
       var wigg = (st.swap && (st.swap[0] === i || st.swap[1] === i)) ? "wig" : "";
@@ -3297,7 +3718,10 @@ function renderArray(st, lesson){
   // 临时数组 tmp[]
   if(hasAux){
     var cellY = H - 50, cellH = 24, cellW = bw * 0.62;
-    out += '<text class="rowlab" x="' + P + '" y="' + (cellY - 8) + '">tmp[] 临时数组</text>';
+    var auxLab = lesson.kind === "prefix" ? "pre[] 前缀和"
+               : (lesson.kind === "lis" || lesson.kind === "rob") ? "dp[]"
+               : (lesson.kind === "bit") ? "t[] 树状数组" : "tmp[] 临时数组";
+    out += '<text class="rowlab" x="' + P + '" y="' + (cellY - 8) + '">' + auxLab + '</text>';
     for(var i=0;i<st.aux.length;i++){
       var ax = P + i*bw + (bw - cellW)/2;
       var av = st.aux[i];
@@ -3488,6 +3912,7 @@ function renderDP(st, lesson){
   }
   var legend = lesson.kind === "floyd" ? "行 = 起点 i　列 = 终点 j"
              : lesson.kind === "idp" ? "行 = 左端点 l　列 = 右端点 r"
+             : lesson.kind === "lcs" ? "行 = a 的前 i 个　列 = b 的前 j 个"
              : "行 = 前 i 个物品　列 = 背包容量 j";
   out += '<text class="dphdr" x="' + left + '" y="' + (H - 10) + '">' + legend + '</text>';
   svg.innerHTML = out;
@@ -3539,7 +3964,7 @@ function renderGraph(st, g, fresh, lesson){
            + ' L' + (bx - px*4.2) + ' ' + (by - py*4.2) + ' Z"/>';
     }
     var mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-    var showW = !(lesson && (lesson.kind === "bip" || lesson.kind === "scc"));
+    var showW = !(lesson && (lesson.kind === "bip" || lesson.kind === "scc" || lesson.kind === "dsu"));
     var dirW = !g.dir || (lesson && (lesson.kind === "bell" || lesson.kind === "flow"));
     if(showW && dirW){
       var lbl = e.w;
@@ -3754,6 +4179,28 @@ function flowHTML(st){
   return h;
 }
 
+function dsuHTML(st){
+  var n = st.n || 0;
+  var h = '<div class="sub">fa 数组（父亲）</div><div class="grid-chips">';
+  for(var v=1; v<=n; v++){
+    h += '<span class="kv">' + v + '<b>' + (st.dsuParent.get(v) === undefined ? "?" : st.dsuParent.get(v)) + '</b></span>';
+  }
+  h += '</div>';
+  var roots = {};
+  for(var v=1; v<=n; v++){
+    var x = v, guard = 0;
+    while(st.dsuParent.get(x) !== x && guard++ < 20) x = st.dsuParent.get(x);
+    roots[x] = true;
+  }
+  h += '<div class="sub">分成几伙</div><div class="grid-chips">'
+     + '<span class="kv">组数<b>' + Object.keys(roots).length + '</b></span></div>';
+  h += '<div class="sub">两个优化</div><div class="formula">'
+     + '路径压缩：find 时把沿途点直接挂到根上<br>'
+     + '按大小合并：小的挂到大的下面<br><br>'
+     + '两个一起用，find 接近 O(1)。</div>';
+  return h;
+}
+
 function primHTML(st){
   var n = st.n || 0;
   var h = '<div class="sub">key（连到树里的最短边）</div><div class="grid-chips">';
@@ -3961,10 +4408,41 @@ function bitHTML(st){
   return h;
 }
 
+var SIMPLE_KINDS = {
+  recur:  { t:"递推",     f:"f[i] = f[i-1] + f[i-2]" },
+  rob:    { t:"打家劫舍", f:"dp[i] = max(dp[i-1], dp[i-2] + a[i])" },
+  twoptr: { t:"双指针",   f:"和太小 → 左指针右移；和太大 → 右指针左移" },
+  slide:  { t:"滑动窗口", f:"右指针扩张；sum ≥ S 时左指针收缩" },
+  sieve:  { t:"质数筛",   f:"i 是质数，就划掉 i²、i²+i、i²+2i …" },
+  lis:    { t:"LIS",      f:"dp[i] = 1 + max(dp[j])，要求 a[j] < a[i]" }
+};
+
+function simpleHTML(st, lesson){
+  var k = SIMPLE_KINDS[lesson.kind];
+  var h = '<div class="sub">' + k.t + '</div><div class="formula">' + k.f + '</div>';
+  if(lesson.kind === "rob" || lesson.kind === "lis"){
+    h += '<div class="sub">dp 表</div><div class="grid-chips">';
+    var aux = st.aux || [];
+    for(var i=0;i<aux.length;i++) h += '<span class="kv">' + i + '<b>' + (aux[i] === null ? "·" : aux[i]) + '</b></span>';
+    h += '</div>';
+  }
+  if(lesson.kind === "sieve"){
+    h += '<div class="sub">已划掉</div><div class="grid-chips">'
+       + '<span class="kv">个数<b>' + (st.dimSet ? st.dimSet.size : 0) + '</b></span></div>';
+  }
+  if(lesson.kind === "slide"){
+    h += '<div class="sub">窗口</div><div class="grid-chips">'
+       + '<span class="kv">l<b>' + (st.ptrs.lo === undefined ? "-" : st.ptrs.lo) + '</b></span>'
+       + '<span class="kv">r<b>' + (st.ptrs.hi === undefined ? "-" : st.ptrs.hi) + '</b></span></div>';
+  }
+  return h;
+}
+
 function arrHTML(st, lesson){
   if(lesson.kind === "mono") return monoHTML(st);
   if(lesson.kind === "memo") return memoHTML(st);
   if(lesson.kind === "bit") return bitHTML(st);
+  if(SIMPLE_KINDS[lesson.kind]) return simpleHTML(st, lesson);
   var s = st.stats || {};
   var h = "";
 
@@ -4082,6 +4560,39 @@ function stringHTML(st){
 }
 
 function dpHTML(st, lesson, data){
+  if(lesson.kind === "lcs"){
+    var A = (data && data.a) || "ABCBDAB";
+    var B = (data && data.b) || "BDCABA";
+    var lh = '<div class="sub">两个串</div><div class="val">'
+           + '<span class="chip">a: ' + esc(A) + '</span><span class="chip">b: ' + esc(B) + '</span></div>';
+    lh += '<div class="sub">行列含义</div><div class="formula">'
+        + '第 i 行 = a 的前 i 个字符<br>第 j 列 = b 的前 j 个字符<br><br>'
+        + '相同 → 左上角 + 1<br>不同 → max(上, 左)</div>';
+    if(st.grid){
+      var ansL = st.grid[st.dpRows - 1][st.dpCols - 1];
+      lh += '<div class="grid-chips" style="margin-top:8px"><span class="kv">答案 dp['
+          + (st.dpRows - 1) + '][' + (st.dpCols - 1) + ']<b>' + (ansL === null ? "—" : ansL) + '</b></span></div>';
+    }
+    return lh;
+  }
+  if(lesson.kind === "mknap"){
+    var items = (data && data.items) || [[2,3,2],[3,4,1],[4,5,2]];
+    var mh = '<div class="sub">物品（重量 / 价值 / 数量）</div><div class="val">';
+    for(var i=0;i<items.length;i++){
+      mh += '<span class="chip">' + (i+1) + '：' + items[i][0] + ' / ' + items[i][1] + ' / ' + items[i][2] + '</span>';
+    }
+    mh += '</div>';
+    mh += '<div class="sub">和 01 背包的区别</div><div class="formula">'
+        + '每种物品有数量上限 c，<br>'
+        + '所以要多一层 k = 1..c 的枚举。<br><br>'
+        + '状态还是「前 i 种、容量 j」。</div>';
+    if(st.grid){
+      var ansM = st.grid[st.dpRows - 1][st.dpCols - 1];
+      mh += '<div class="grid-chips" style="margin-top:8px"><span class="kv">答案 dp['
+          + (st.dpRows - 1) + '][' + (st.dpCols - 1) + ']<b>' + (ansM === null ? "—" : ansM) + '</b></span></div>';
+    }
+    return mh;
+  }
   if(lesson.kind === "idp"){
     var vals = (data && data.values) || [];
     var ih = '<div class="sub">石子堆</div><div class="grid-chips">';
@@ -4185,7 +4696,9 @@ function renderStruct(st, lesson, fresh, data){
   if(lesson.view === "array"){
     var at = {
       binary:"查找区间", prefix:"前缀和", diff:"差分", mono:"单调栈",
-      memo:"记忆化搜索", merge:"归并与递归", quick:"递归与区间", bit:"树状数组"
+      memo:"记忆化搜索", merge:"归并与递归", quick:"递归与区间", bit:"树状数组",
+      recur:"递推", rob:"线性 DP", twoptr:"双指针", slide:"滑动窗口",
+      sieve:"筛法", lis:"线性 DP", lcs:"二维 DP", mknap:"背包"
     };
     title.textContent = at[lesson.kind] || "排序过程";
     el.innerHTML = arrHTML(st, lesson);
@@ -4224,6 +4737,9 @@ function renderStruct(st, lesson, fresh, data){
   }else if(lesson.kind === "flow"){
     title.textContent = "流量与容量";
     el.innerHTML = flowHTML(st);
+  }else if(lesson.kind === "dsu"){
+    title.textContent = "并查集";
+    el.innerHTML = dsuHTML(st);
   }else if(lesson.kind === "kru"){
     title.textContent = "边表与并查集";
     el.innerHTML = kruHTML(st, fresh);
@@ -4426,6 +4942,7 @@ var app = {
   bip: JSON.parse(JSON.stringify(BIP_PRESET)),
   scc: JSON.parse(JSON.stringify(SCC_PRESET)),
   flow: JSON.parse(JSON.stringify(FLOW_PRESET)),
+  dsu: JSON.parse(JSON.stringify(DSU_PRESET)),
   array: null,
   lesson: null,
   steps: [],
@@ -4441,6 +4958,7 @@ function curGraph(){
   if(app.lesson.data === "bip") return app.bip;
   if(app.lesson.data === "scc") return app.scc;
   if(app.lesson.data === "flow") return app.flow;
+  if(app.lesson.data === "dsu") return app.dsu;
   return app.graph;
 }
 
@@ -4671,6 +5189,7 @@ function bind(){
     else if(app.lesson.data === "bip") app.bip = JSON.parse(JSON.stringify(BIP_PRESET));
     else if(app.lesson.data === "scc") app.scc = JSON.parse(JSON.stringify(SCC_PRESET));
     else if(app.lesson.data === "flow") app.flow = randomFlow();
+    else if(app.lesson.data === "dsu") app.dsu = randomDsu();
     else if(app.lesson.view === "graph") app.graph = randomGraph();
     else app.array = randomData(app.lesson);
     rebuild(false);
@@ -4682,6 +5201,7 @@ function bind(){
     else if(app.lesson.data === "bip") app.bip = JSON.parse(JSON.stringify(BIP_PRESET));
     else if(app.lesson.data === "scc") app.scc = JSON.parse(JSON.stringify(SCC_PRESET));
     else if(app.lesson.data === "flow") app.flow = JSON.parse(JSON.stringify(FLOW_PRESET));
+    else if(app.lesson.data === "dsu") app.dsu = JSON.parse(JSON.stringify(DSU_PRESET));
     else if(app.lesson.view === "graph") app.graph = JSON.parse(JSON.stringify(PRESET));
     else app.array = defaultData(app.lesson);
     rebuild(false);
