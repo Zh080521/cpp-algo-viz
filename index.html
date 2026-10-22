@@ -414,6 +414,23 @@
   .glab{fill:#7d90a5;font-family:var(--mono);font-size:10px}
   .gaxis{stroke:#16212b;stroke-width:1}
 
+  /* 速查页 */
+  .doc-pane{position:absolute;inset:0;overflow:auto;padding:20px 26px;color:#b9c8d8;
+    font-size:13px;line-height:1.75}
+  .doc-pane h3{margin:18px 0 8px;font-size:13px;color:var(--cyan);font-weight:600;letter-spacing:.4px}
+  .doc-pane h3:first-child{margin-top:0}
+  .doc-pane p{margin:6px 0}
+  .doc-pane table{border-collapse:collapse;width:100%;margin:8px 0;font-family:var(--mono);font-size:12px}
+  .doc-pane th,.doc-pane td{border:1px solid var(--line);padding:5px 8px;text-align:left}
+  .doc-pane th{color:var(--dim);font-weight:500;background:rgba(255,255,255,.02)}
+  .doc-pane code{font-family:var(--mono);font-size:12px;background:#14202c;border:1px solid #26394b;
+    padding:1px 5px;border-radius:4px;color:#cfe3f5}
+  .doc-pane pre{background:#0b131b;border:1px solid var(--line);border-radius:9px;padding:10px 12px;
+    overflow:auto;font-family:var(--mono);font-size:12px;line-height:1.7;color:#b9c8d8}
+  .doc-pane ul{margin:6px 0 6px 18px;padding:0}
+  .doc-pane li{margin:3px 0}
+  .doc-pane b{color:#e6f1fb}
+
   /* 二进制位 */
   .bcell rect{fill:#14202c;stroke:#2b3a49;stroke-width:1.2}
   .bcell.hi rect{fill:#2a2318;stroke:var(--amber);stroke-width:2.4}
@@ -637,7 +654,7 @@ int main() {
         <button id="btnPreset" class="mini">示例图</button>
       </span>
     </div>
-    <div class="graph-wrap"><svg id="graph" viewBox="0 0 620 380" preserveAspectRatio="xMidYMid meet"></svg><div id="paws"></div></div>
+    <div class="graph-wrap"><svg id="graph" viewBox="0 0 620 380" preserveAspectRatio="xMidYMid meet"></svg><div id="paws"></div><div id="docPane" class="doc-pane" hidden></div></div>
   </section>
 
   <section class="pane">
@@ -1431,6 +1448,32 @@ var CODE_ARRANGE = [
   "// A(5, 3) = 5 × 4 × 3 = 60"
 ];
 
+var CODE_BIGO = [
+  "for (int i = 0; i < n; i++)        // O(n)",
+  "    for (int j = 0; j < n; j++)    // 再套一层 → O(n²)",
+  "        sum += a[i] * a[j];"
+];
+
+var CODE_STL = [
+  "vector<int> v = {3, 1, 4};",
+  "sort(v.begin(), v.end());                  // 升序",
+  "sort(v.begin(), v.end(), greater<int>());  // 降序",
+  "bool has = binary_search(v.begin(), v.end(), 4);"
+];
+
+var CODE_IO = [
+  "ios::sync_with_stdio(false);",
+  "cin.tie(nullptr);",
+  "int n;",
+  "while (cin >> n) { /* 多组数据 */ }"
+];
+
+var CODE_MOD = [
+  "const int MOD = 1e9 + 7;",
+  "long long r = 1LL * a * b % MOD;   // 先转 long long",
+  "int sub = (a - b + MOD) % MOD;     // 减法防负"
+];
+
 var CODE_DIJ = [
   "const int INF = 0x3f3f3f3f;",
   "using P = pair<int,int>;",
@@ -1486,6 +1529,9 @@ var LESSONS = [
   { id:"mer", nav:"归并排序",        sec:"基础",     view:"array", kind:"merge",  code:CODE_MERGE },
   { id:"pre", nav:"前缀和",          sec:"基础",     view:"array", kind:"prefix", code:CODE_PRE },
   { id:"dif", nav:"差分",            sec:"基础",     view:"array", kind:"diff",   code:CODE_DIFF },
+  { id:"bigo", nav:"复杂度分析",      sec:"基础",     view:"doc",   kind:"bigo",   code:CODE_BIGO },
+  { id:"stl", nav:"STL 速查",         sec:"基础",     view:"doc",   kind:"stl",    code:CODE_STL },
+  { id:"io", nav:"输入输出",          sec:"基础",     view:"doc",   kind:"io",     code:CODE_IO },
   { id:"recur", nav:"递推 · 爬楼梯",  sec:"基础",     view:"array", kind:"recur",  code:CODE_RECUR },
   { id:"fact", nav:"递归 · 阶乘",     sec:"基础",     view:"array", kind:"fact",   code:CODE_FACT },
   { id:"twoptr", nav:"双指针",        sec:"基础",     view:"array", kind:"twoptr", code:CODE_TWOPTR },
@@ -1497,6 +1543,7 @@ var LESSONS = [
   { id:"bits", nav:"位运算",          sec:"数学",     view:"bits",  kind:"bits",   code:CODE_BITS },
   { id:"pow", nav:"快速幂",           sec:"数学",     view:"bits",  kind:"pow",    code:CODE_POW },
   { id:"arrange", nav:"排列数",       sec:"数学",     view:"array", kind:"arrange", code:CODE_ARRANGE },
+  { id:"mod", nav:"取模与溢出",       sec:"数学",     view:"doc",   kind:"mod",    code:CODE_MOD },
   { id:"k01", nav:"01 背包",         sec:"动态规划", view:"dp",    kind:"knap01", code:CODE_KNAP01 },
   { id:"kfc", nav:"完全背包",        sec:"动态规划", view:"dp",    kind:"knapfull", code:CODE_KNAPFULL },
   { id:"memo", nav:"记忆化搜索",     sec:"动态规划", view:"array", kind:"memo",   code:CODE_MEMO },
@@ -1538,6 +1585,7 @@ function defaultArray(id){
 }
 
 function defaultData(lesson){
+  if(lesson.view === "doc") return {};
   if(lesson.kind === "floyd") return { n:4, edges:[[0,1,4],[0,2,1],[1,3,2],[2,3,5]] };
   if(lesson.kind === "idp") return { values:[4,1,2,3,5,2] };
   if(lesson.kind === "kmp") return { text:"ABABABCABAA", pat:"ABABC" };
@@ -3577,7 +3625,90 @@ function simArrange(data){
   return steps;
 }
 
+var DOC = {
+  bigo: function(){
+    return '<h3>常见复杂度，n 变大时差多少</h3>'
+      + '<table><tr><th>复杂度</th><th>n=10</th><th>n=100</th><th>n=1000</th></tr>'
+      + '<tr><td>O(1)</td><td>1</td><td>1</td><td>1</td></tr>'
+      + '<tr><td>O(log n)</td><td>3</td><td>7</td><td>10</td></tr>'
+      + '<tr><td>O(n)</td><td>10</td><td>100</td><td>1000</td></tr>'
+      + '<tr><td>O(n log n)</td><td>33</td><td>664</td><td>9966</td></tr>'
+      + '<tr><td>O(n²)</td><td>100</td><td>10 000</td><td>1 000 000</td></tr>'
+      + '<tr><td>O(2ⁿ)</td><td>1024</td><td>天文数字</td><td>别想</td></tr></table>'
+      + '<h3>怎么数循环</h3><ul>'
+      + '<li>单层循环跑 n 次 → <code>O(n)</code></li>'
+      + '<li>两层各跑 n 次 → <code>O(n²)</code></li>'
+      + '<li><code>i *= 2</code> 或 <code>i /= 2</code> → <code>O(log n)</code></li>'
+      + '<li>递归 <code>T(n)=T(n-1)+1</code> → <code>O(n)</code></li>'
+      + '<li>递归 <code>T(n)=2T(n/2)+n</code> → <code>O(n log n)</code></li></ul>'
+      + '<h3>常数也很重要</h3>'
+      + '<p>同样是 <code>O(n log n)</code>，<code>sort</code> 比手写快排常数小；<code>map</code> 比数组慢得多。'
+      + 'n 只有 1000 时，常数可能比复杂度更能决定快慢。</p>'
+      + '<h3>常见误判</h3><ul>'
+      + '<li>循环里 <code>s = s + ch</code> 拼字符串，可能是 <code>O(n²)</code></li>'
+      + '<li><code>vector</code> 按值传参，每次调用都拷贝一遍</li>'
+      + '<li>只算最内层，忘了外层还有一层</li></ul>';
+  },
+  stl: function(){
+    return '<h3>最常用的几个</h3>'
+      + '<pre>vector&lt;int&gt; v;            v.push_back(3); v.size(); v[i];\n'
+      + 'sort(v.begin(), v.end());  // 升序\n'
+      + 'sort(v.begin(), v.end(), greater&lt;int&gt;()); // 降序\n'
+      + 'reverse(v.begin(), v.end());\n'
+      + 'lower_bound(v.begin(), v.end(), x) - v.begin(); // 第一个 ≥ x</pre>'
+      + '<h3>容器怎么选</h3>'
+      + '<table><tr><th>容器</th><th>查找</th><th>插入</th><th>用在哪</th></tr>'
+      + '<tr><td>vector</td><td>O(1) 下标</td><td>尾部 O(1)</td><td>数组、邻接表</td></tr>'
+      + '<tr><td>set / map</td><td>O(log n)</td><td>O(log n)</td><td>要自动排序、去重</td></tr>'
+      + '<tr><td>unordered_map</td><td>平均 O(1)</td><td>平均 O(1)</td><td>计数、映射</td></tr>'
+      + '<tr><td>priority_queue</td><td>堆顶 O(1)</td><td>O(log n)</td><td>Dijkstra、合并</td></tr>'
+      + '<tr><td>stack / queue</td><td>—</td><td>O(1)</td><td>DFS / BFS</td></tr></table>'
+      + '<h3>两个坑</h3><ul>'
+      + '<li><code>sort</code> 的比较器必须严格弱序，不能写 <code>&lt;=</code></li>'
+      + '<li><code>lower_bound</code> 要求区间已经有序，否则结果是错的</li></ul>';
+  },
+  io: function(){
+    return '<h3>读数据</h3>'
+      + '<pre>int n; cin &gt;&gt; n;\n'
+      + 'while (cin &gt;&gt; n) { /* 多组数据，读到 EOF */ }\n'
+      + 'string s; getline(cin, s);   // 读一整行</pre>'
+      + '<h3>cin 慢怎么办</h3>'
+      + '<pre>ios::sync_with_stdio(false);\ncin.tie(nullptr);</pre>'
+      + '<p>两行加在 <code>main</code> 开头，读入能快好几倍。加了之后不要再混用 <code>scanf</code>。</p>'
+      + '<h3>输出</h3>'
+      + '<pre>cout &lt;&lt; fixed &lt;&lt; setprecision(2) &lt;&lt; x;  // 两位小数\n'
+      + 'printf("%.2f\\n", x);</pre>'
+      + '<h3>常见坑</h3><ul>'
+      + '<li><code>getline</code> 前如果刚 <code>cin &gt;&gt;</code> 过，要先用 <code>cin.ignore()</code> 吃掉换行</li>'
+      + '<li>多组数据记得每组把数组、计数器清空</li>'
+      + '<li>输出格式多一个空格、少一个换行都可能判错</li></ul>';
+  },
+  mod: function(){
+    return '<h3>先记住范围</h3>'
+      + '<table><tr><th>类型</th><th>范围</th><th>大约</th></tr>'
+      + '<tr><td>int</td><td>-2³¹ ~ 2³¹-1</td><td>±2.1 × 10⁹</td></tr>'
+      + '<tr><td>long long</td><td>-2⁶³ ~ 2⁶³-1</td><td>±9.2 × 10¹⁸</td></tr></table>'
+      + '<h3>最常见的溢出</h3>'
+      + '<pre>int a = 1e9, b = 1e9;\n'
+      + 'long long r = a * b;          // 错！先按 int 算，已经溢出\n'
+      + 'long long r = 1LL * a * b;    // 对：先把 a 变成 long long</pre>'
+      + '<h3>取模的三条规则</h3>'
+      + '<pre>(a + b) % M = ((a % M) + (b % M)) % M\n'
+      + '(a - b + M) % M                     // 减法防负\n'
+      + '(a * b) % M = ((a % M) * (b % M)) % M</pre>'
+      + '<h3>注意</h3><ul>'
+      + '<li>负数取模在 C++ 里结果可能是负的，要 <code>+M</code> 再 <code>%M</code></li>'
+      + '<li><code>1e9+7</code> 是质数，常用它是因为乘法不容易溢出、还能求逆元</li>'
+      + '<li>只有加法和乘法能边算边取模，除法不行</li></ul>';
+  }
+};
+
+function simDoc(){
+  return [{ line:0, note:"速查页：这页没有动画，直接看内容", events:[] }];
+}
+
 function buildSteps(lesson, g, arr){
+  if(lesson.view === "doc") return simDoc();
   if(lesson.kind === "bubble") return simBubble(arr);
   if(lesson.kind === "binary") return simBinary(arr);
   if(lesson.kind === "quick")  return simQuick(arr);
@@ -5300,6 +5431,14 @@ function topoHTML(st){
 function renderStruct(st, lesson, fresh, data){
   var title = document.getElementById("structTitle");
   var el = document.getElementById("struct");
+  if(lesson.view === "doc"){
+    title.textContent = "速查";
+    el.innerHTML = '<div class="sub">说明</div><div class="formula">'
+      + '这一页是静态速查，没有动画。<br><br>'
+      + '左边是相关代码，中间是要点和表格。<br>'
+      + '用侧栏或「跳到下一次」切换课时。</div>';
+    return;
+  }
   if(lesson.view === "dp"){
     title.textContent = "DP 表";
     el.innerHTML = dpHTML(st, lesson, data);
@@ -5626,10 +5765,21 @@ function render(){
   var isGantt = app.lesson.view === "gantt";
   var isBits = app.lesson.view === "bits";
   var isHash = app.lesson.view === "hash";
+  var isDoc = app.lesson.view === "doc";
   var isGraph = app.lesson.view === "graph";
 
+  var svgEl = document.getElementById("graph");
+  var docEl = document.getElementById("docPane");
+  svgEl.style.display = isDoc ? "none" : "";
+  docEl.hidden = !isDoc;
+  if(isDoc && docEl.getAttribute("data-k") !== app.lesson.kind){
+    docEl.innerHTML = DOC[app.lesson.kind] ? DOC[app.lesson.kind]() : "";
+    docEl.setAttribute("data-k", app.lesson.kind);
+  }
+
   renderCode(app.lesson, step ? step.line : -1);
-  if(isArr) renderArray(st, app.lesson);
+  if(isDoc){ /* 速查页没有动画 */ }
+  else if(isArr) renderArray(st, app.lesson);
   else if(isDp) renderDP(st, app.lesson);
   else if(isHeap) renderHeap(st, app.lesson);
   else if(isStr) renderString(st, app.lesson);
@@ -5644,9 +5794,12 @@ function render(){
   document.getElementById("vizTitle").textContent = isDp
     ? (app.lesson.kind === "floyd" ? "距离表" : "DP 表")
     : (isArr ? "数组" : (isHeap ? "堆" : (isStr ? "字符串" : (isSeg ? "线段树"
-    : (isTrie ? "字典树" : (isGantt ? "区间" : (isBits ? "二进制" : (isHash ? "哈希桶" : "图"))))))));
+    : (isTrie ? "字典树" : (isGantt ? "区间" : (isBits ? "二进制"
+    : (isHash ? "哈希桶" : (isDoc ? "速查" : "图")))))))));
   document.getElementById("btnRandom").textContent = isGraph ? "随机图" : "换一组数据";
   document.getElementById("btnPreset").textContent = isGraph ? "示例图" : "还原示例";
+  document.getElementById("btnRandom").style.display = isDoc ? "none" : "";
+  document.getElementById("btnPreset").style.display = isDoc ? "none" : "";
   document.getElementById("crumb").innerHTML =
     app.lesson.sec + ' <span style="color:#3d4e60">/</span> <b>' + app.lesson.nav + '</b>';
 
