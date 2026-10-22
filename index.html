@@ -742,6 +742,31 @@ var NEG_PRESET = {
          4:[0.66,0.50], 5:[0.92,0.50] }
 };
 
+// 偶环，一定是二分图
+var BIP_PRESET = {
+  n: 6,
+  edges: [[1,2,1],[2,3,1],[3,4,1],[4,5,1],[5,6,1],[6,1,1]],
+  pos: { 1:[0.12,0.24], 2:[0.38,0.10], 3:[0.64,0.24],
+         4:[0.86,0.52], 5:[0.56,0.86], 6:[0.24,0.68] }
+};
+
+// 三个强连通分量：{1,2,3} {4,5} {6}
+var SCC_PRESET = {
+  n: 6,
+  dir: true,
+  edges: [[1,2,1],[2,3,1],[3,1,1],[3,4,1],[4,5,1],[5,4,1],[5,6,1]],
+  pos: { 1:[0.10,0.30], 2:[0.36,0.12], 3:[0.52,0.42],
+         4:[0.74,0.70], 5:[0.50,0.86], 6:[0.90,0.38] }
+};
+
+// 最大流：1 是源，4 是汇，容量标在边上
+var FLOW_PRESET = {
+  n: 4,
+  dir: true,
+  edges: [[1,2,3],[1,3,2],[2,3,1],[2,4,2],[3,4,3]],
+  pos: { 1:[0.10,0.50], 2:[0.42,0.20], 3:[0.42,0.80], 4:[0.86,0.50] }
+};
+
 var CODE_ADJ = [
   "int n, m;",
   "cin >> n >> m;                      // 点数、边数",
@@ -1073,6 +1098,100 @@ var CODE_BELL = [
   "// 第 n 轮还能松弛 → 有负环"
 ];
 
+var CODE_SPFA = [
+  "vector<int> dist(n + 1, INF);",
+  "vector<int> inq(n + 1, 0);",
+  "queue<int> q;",
+  "dist[s] = 0; q.push(s); inq[s] = 1;",
+  "while (!q.empty()) {",
+  "    int u = q.front(); q.pop(); inq[u] = 0;",
+  "    for (auto &e : g[u]) {",
+  "        if (dist[u] + e.w < dist[e.v]) {",
+  "            dist[e.v] = dist[u] + e.w;",
+  "            if (!inq[e.v]) { q.push(e.v); inq[e.v] = 1; }",
+  "        }",
+  "    }",
+  "}"
+];
+
+var CODE_PRIM = [
+  "int ans = 0;",
+  "vector<int> key(n + 1, INF), inTree(n + 1, 0);",
+  "key[1] = 0;",
+  "for (int i = 1; i <= n; i++) {",
+  "    int u = 0;                            // key[0] = INF 当哨兵",
+  "    for (int v = 1; v <= n; v++)",
+  "        if (!inTree[v] && key[v] < key[u]) u = v;",
+  "    inTree[u] = 1; ans += key[u];",
+  "    for (auto &e : g[u]) {",
+  "        if (!inTree[e.v] && e.w < key[e.v]) {",
+  "            key[e.v] = e.w;",
+  "            from[e.v] = u;",
+  "        }",
+  "    }",
+  "}"
+];
+
+var CODE_BIP = [
+  "vector<int> color(n + 1, -1);",
+  "queue<int> q;",
+  "color[1] = 0; q.push(1);",
+  "while (!q.empty()) {",
+  "    int u = q.front(); q.pop();",
+  "    for (auto &e : g[u]) {",
+  "        if (color[e.v] == -1) {",
+  "            color[e.v] = color[u] ^ 1;   // 染相反色",
+  "            q.push(e.v);",
+  "        } else if (color[e.v] == color[u]) {",
+  "            return false;                // 相邻同色",
+  "        }",
+  "    }",
+  "}",
+  "return true;"
+];
+
+var CODE_SCC = [
+  "vector<int> dfn(n + 1), low(n + 1), inst(n + 1);",
+  "int timer = 0;",
+  "vector<int> stk;",
+  "void dfs(int u) {",
+  "    dfn[u] = low[u] = ++timer;",
+  "    stk.push_back(u); inst[u] = 1;",
+  "    for (int v : g[u]) {",
+  "        if (!dfn[v]) { dfs(v); low[u] = min(low[u], low[v]); }",
+  "        else if (inst[v]) low[u] = min(low[u], dfn[v]);",
+  "    }",
+  "    if (low[u] == dfn[u]) {          // u 是本分量的根",
+  "        while (true) {",
+  "            int x = stk.back(); stk.pop_back(); inst[x] = 0;",
+  "            if (x == u) break;",
+  "        }",
+  "    }",
+  "}"
+];
+
+var CODE_FLOW = [
+  "int maxflow = 0;",
+  "while (true) {",
+  "    vector<int> pre(n + 1, -1);",
+  "    queue<int> q; q.push(s); pre[s] = 0;",
+  "    while (!q.empty()) {",
+  "        int u = q.front(); q.pop();",
+  "        for (auto &e : g[u])",
+  "            if (pre[e.v] == -1 && e.cap > e.flow) {",
+  "                pre[e.v] = u; q.push(e.v);",
+  "            }",
+  "    }",
+  "    if (pre[t] == -1) break;         // 没有增广路",
+  "    int add = INF;                   // 找瓶颈",
+  "    for (int v = t; v != s; v = pre[v])",
+  "        add = min(add, cap(pre[v], v));",
+  "    for (int v = t; v != s; v = pre[v])",
+  "        flow(pre[v], v) += add;",
+  "    maxflow += add;",
+  "}"
+];
+
 var CODE_DIJ = [
   "const int INF = 0x3f3f3f3f;",
   "using P = pair<int,int>;",
@@ -1144,10 +1263,15 @@ var LESSONS = [
   { id:"dfs", nav:"DFS 深度优先",    sec:"图论基础", view:"graph", kind:"dfs",   code:CODE_DFS },
   { id:"bfs", nav:"BFS 广度优先",    sec:"图论基础", view:"graph", kind:"bfs",   code:CODE_BFS },
   { id:"top", nav:"拓扑排序",        sec:"图论基础", view:"graph", kind:"topo",  data:"dag", code:CODE_TOPO },
+  { id:"bip", nav:"二分图判定",      sec:"图论基础", view:"graph", kind:"bip",   data:"bip", code:CODE_BIP },
   { id:"dij", nav:"Dijkstra 最短路", sec:"进阶",     view:"graph", kind:"dij",   code:CODE_DIJ },
   { id:"bell", nav:"Bellman-Ford",  sec:"进阶",     view:"graph", kind:"bell",  data:"neg", code:CODE_BELL },
+  { id:"spfa", nav:"SPFA",          sec:"进阶",     view:"graph", kind:"spfa",  data:"neg", code:CODE_SPFA },
   { id:"fly", nav:"Floyd 多源最短路", sec:"进阶",    view:"dp",    kind:"floyd", code:CODE_FLOYD },
-  { id:"kru", nav:"Kruskal 生成树",  sec:"进阶",     view:"graph", kind:"kru",   code:CODE_KRU }
+  { id:"kru", nav:"Kruskal 生成树",  sec:"进阶",     view:"graph", kind:"kru",   code:CODE_KRU },
+  { id:"prim", nav:"Prim 生成树",    sec:"进阶",     view:"graph", kind:"prim",  code:CODE_PRIM },
+  { id:"scc", nav:"Tarjan 强连通",   sec:"进阶",     view:"graph", kind:"scc",   data:"scc", code:CODE_SCC },
+  { id:"flow", nav:"网络流",         sec:"进阶",     view:"graph", kind:"flow",  data:"flow", code:CODE_FLOW }
 ];
 
 function defaultArray(id){
@@ -2384,6 +2508,256 @@ function simBell(g){
   return steps;
 }
 
+function simSpfa(g){
+  var steps = [];
+  function push(line, note, events){ steps.push({line:line, note:note||"", events:events||[]}); }
+  var n = g.n, adj = {};
+  for(var v=1; v<=n; v++) adj[v] = [];
+  for(var k=0; k<g.edges.length; k++){
+    var e = g.edges[k];
+    adj[e[0]].push({ v:e[1], w:e[2] });
+  }
+  var dist = {}, inq = {}, q = [];
+  for(var v=1; v<=n; v++) dist[v] = Infinity;
+  function num(x){ return x === Infinity ? "∞" : String(x); }
+
+  push(0, "dist 全部设成 ∞，队列先空着", []);
+  dist[1] = 0; q.push(1); inq[1] = true;
+  push(3, "起点 1 入队，dist[1] = 0", [{t:"dist", u:1, val:0}, {t:"qpush", u:1}]);
+
+  while(q.length){
+    var u = q.shift(); inq[u] = false;
+    push(5, "取出队首 " + u + "（dist = " + num(dist[u]) + "），用它去松弛邻居", [{t:"qpop"},{t:"cur", u:u}]);
+    var list = adj[u] || [];
+    for(var i=0; i<list.length; i++){
+      var v = list[i].v, w = list[i].w;
+      push(7, "看边 " + u + " → " + v + "：" + num(dist[u]) + " + (" + w + ") = " + num(dist[u] + w)
+           + "，对比 " + num(dist[v]), [{t:"hi", u:u, v:v}]);
+      if(dist[u] + w < dist[v]){
+        dist[v] = dist[u] + w;
+        push(8, "更小，更新 dist[" + v + "] = " + dist[v], [{t:"dist", u:v, val:dist[v]}]);
+        if(!inq[v]){
+          q.push(v); inq[v] = true;
+          push(9, v + " 不在队列里，入队等下一轮", [{t:"qpush", u:v}]);
+        }else{
+          push(9, v + " 已经在队列里了，不重复入队");
+        }
+      }
+    }
+  }
+  var parts = [];
+  for(var v=1; v<=n; v++) parts.push(v + ":" + num(dist[v]));
+  push(12, "队列空了，最终 dist —— " + parts.join("  "), [{t:"cur", u:0}]);
+  return steps;
+}
+
+function simPrim(g){
+  var steps = [];
+  function push(line, note, events){ steps.push({line:line, note:note||"", events:events||[]}); }
+  var n = g.n;
+  var adj = {};
+  for(var v=1; v<=n; v++) adj[v] = [];
+  for(var k=0; k<g.edges.length; k++){
+    var e = g.edges[k];
+    adj[e[0]].push({ v:e[1], w:e[2] });
+    adj[e[1]].push({ v:e[0], w:e[2] });
+  }
+  var key = {}, inTree = {}, from = {}, total = 0;
+  for(var v=0; v<=n; v++) key[v] = Infinity;
+  key[1] = 0;
+  function num(x){ return x === Infinity ? "∞" : String(x); }
+
+  push(2, "从 1 号点开始，key[1] = 0，其它都是 ∞", [{t:"dist", u:1, val:0}]);
+
+  for(var i=1; i<=n; i++){
+    var u = 0;
+    push(5, "第 " + i + " 轮：在树外找 key 最小的点", []);
+    for(var v=1; v<=n; v++){
+      if(!inTree[v] && key[v] < key[u]) u = v;
+    }
+    inTree[u] = true;
+    total += key[u];
+    push(7, "选 " + u + " 进树，加上边权 " + key[u] + "，累计 " + total,
+         [{t:"visit", u:u}, {t:"cur", u:u}]);
+    if(from[u]){
+      push(7, "接上边 " + from[u] + " — " + u + "（权重 " + key[u] + "）",
+           [{t:"mstAdd", u:from[u], v:u, w:key[u]}]);
+    }
+    var list = adj[u] || [];
+    for(var j=0; j<list.length; j++){
+      var v2 = list[j].v, w = list[j].w;
+      if(!inTree[v2] && w < key[v2]){
+        key[v2] = w; from[v2] = u;
+        push(10, "用边 " + u + " — " + v2 + " 更新 key[" + v2 + "] = " + w,
+             [{t:"hi", u:u, v:v2}, {t:"dist", u:v2, val:w}]);
+      }
+    }
+  }
+  push(14, "生成树完成，总权重 " + total, []);
+  return steps;
+}
+
+function simBip(g){
+  var steps = [];
+  function push(line, note, events){ steps.push({line:line, note:note||"", events:events||[]}); }
+  var n = g.n, adj = {};
+  for(var v=1; v<=n; v++) adj[v] = [];
+  for(var k=0; k<g.edges.length; k++){
+    var e = g.edges[k];
+    adj[e[0]].push(e[1]);
+    adj[e[1]].push(e[0]);
+  }
+  var color = {}, q = [], conflict = false;
+  for(var v=1; v<=n; v++) color[v] = -1;
+
+  push(0, "所有点先标成 -1（还没染色）", []);
+  color[1] = 0; q.push(1);
+  push(2, "从 1 号点开始，染成 0 号色并进队", [{t:"color", u:1, c:0}, {t:"qpush", u:1}]);
+
+  while(q.length && !conflict){
+    var u = q.shift();
+    push(4, "取出 " + u + "（颜色 " + color[u] + "），看它的邻居", [{t:"qpop"}, {t:"cur", u:u}]);
+    var list = adj[u] || [];
+    for(var i=0; i<list.length; i++){
+      var v2 = list[i];
+      push(5, "看边 " + u + " — " + v2, [{t:"hi", u:u, v:v2}]);
+      if(color[v2] === -1){
+        color[v2] = color[u] ^ 1;
+        push(7, v2 + " 还没染色，染成 " + color[v2] + "（和 " + u + " 相反）",
+             [{t:"color", u:v2, c:color[v2]}]);
+        q.push(v2);
+        push(8, v2 + " 入队", [{t:"qpush", u:v2}]);
+      }else if(color[v2] === color[u]){
+        push(10, "冲突！" + u + " 和 " + v2 + " 相邻却同色 → 不是二分图",
+             [{t:"hi", u:u, v:v2}]);
+        conflict = true;
+        break;
+      }else{
+        push(9, v2 + " 已经是相反色，没问题");
+      }
+    }
+  }
+  push(14, conflict ? "结论：不是二分图" : "结论：是二分图，两种颜色正好分成两组",
+       [{t:"cur", u:0}]);
+  return steps;
+}
+
+function simScc(g){
+  var steps = [];
+  function push(line, note, events){ steps.push({line:line, note:note||"", events:events||[]}); }
+  var n = g.n, adj = {};
+  for(var v=1; v<=n; v++) adj[v] = [];
+  for(var k=0; k<g.edges.length; k++) adj[g.edges[k][0]].push(g.edges[k][1]);
+
+  var dfn = {}, low = {}, inst = {}, stk = [], timer = 0, comp = 0;
+  for(var v=1; v<=n; v++){ dfn[v] = 0; low[v] = 0; inst[v] = 0; }
+
+  push(0, "dfn 是第一次访问的时间戳，low 是能绕回的最早时间戳", []);
+
+  function dfs(u){
+    timer++;
+    dfn[u] = low[u] = timer;
+    inst[u] = 1; stk.push(u);
+    push(4, "访问 " + u + "：dfn = low = " + timer + "，压入栈",
+         [{t:"dist", u:u, val:timer}, {t:"low", u:u, v:timer}, {t:"spush", u:u}, {t:"cur", u:u}]);
+    var list = adj[u] || [];
+    for(var i=0; i<list.length; i++){
+      var v2 = list[i];
+      if(!dfn[v2]){
+        push(7, u + " → " + v2 + " 还没访问过，递归下去", [{t:"hi", u:u, v:v2}]);
+        dfs(v2);
+        low[u] = Math.min(low[u], low[v2]);
+        push(7, "回到 " + u + "，low[" + u + "] = min(low, low[" + v2 + "]) = " + low[u],
+             [{t:"low", u:u, v:low[u]}]);
+      }else if(inst[v2]){
+        low[u] = Math.min(low[u], dfn[v2]);
+        push(8, u + " → " + v2 + " 还在栈里，low[" + u + "] = min(low, dfn[" + v2 + "]) = " + low[u],
+             [{t:"hi", u:u, v:v2}, {t:"low", u:u, v:low[u]}]);
+      }
+    }
+    if(low[u] === dfn[u]){
+      push(10, "low[" + u + "] = dfn[" + u + "]：u 是一个强连通分量的根，开始弹栈",
+           [{t:"cur", u:u}]);
+      while(true){
+        var x = stk.pop();
+        inst[x] = 0;
+        push(12, "弹出 " + x + "，归入第 " + (comp + 1) + " 个分量",
+             [{t:"spop"}, {t:"color", u:x, c:comp}]);
+        if(x === u) break;
+      }
+      comp++;
+      push(10, "第 " + comp + " 个强连通分量确定，共 " + comp + " 个");
+    }
+  }
+
+  for(var s=1; s<=n; s++) if(!dfn[s]) dfs(s);
+  push(16, "全图跑完，一共 " + comp + " 个强连通分量", [{t:"cur", u:0}]);
+  return steps;
+}
+
+function simFlow(g){
+  var steps = [];
+  function push(line, note, events){ steps.push({line:line, note:note||"", events:events||[]}); }
+  var n = g.n, s = 1, t = n;
+  var cap = {}, flow = {}, adj = {};
+  for(var v=1; v<=n; v++) adj[v] = [];
+  for(var k=0; k<g.edges.length; k++){
+    var e = g.edges[k], key = edgeKey(e[0], e[1]);
+    cap[key] = e[2]; flow[key] = 0;
+    adj[e[0]].push({ v:e[1], key:key });
+  }
+  var total = 0;
+
+  push(0, "每条边有容量，初始流量都是 0", []);
+  push(1, "反复找「还能再推流」的路径，直到找不到");
+
+  while(true){
+    var pre = {}, seen = {};
+    for(var v=1; v<=n; v++) pre[v] = -1;
+    var q = [s];
+    seen[s] = true;
+    push(2, "BFS 从源点 " + s + " 出发，找一条到汇点 " + t + " 的增广路");
+    while(q.length){
+      var u = q.shift();
+      push(5, "从 " + u + " 往外扩");
+      var list = adj[u] || [];
+      for(var i=0; i<list.length; i++){
+        var v2 = list[i].v, k2 = list[i].key;
+        if(!seen[v2] && cap[k2] - flow[k2] > 0){
+          seen[v2] = true; pre[v2] = u; q.push(v2);
+          push(8, "边 " + u + " → " + v2 + " 还剩 " + (cap[k2] - flow[k2]) + " 的容量，记下前驱",
+               [{t:"hi", u:u, v:v2}]);
+        }
+      }
+    }
+    if(!seen[t]){
+      push(11, "BFS 到不了汇点，没有增广路了，结束");
+      break;
+    }
+    var add = Infinity, path = [];
+    for(var v2=t; v2!==s; v2=pre[v2]) path.push([pre[v2], v2]);
+    path.reverse();
+    for(var i=0; i<path.length; i++){
+      var kk = edgeKey(path[i][0], path[i][1]);
+      add = Math.min(add, cap[kk] - flow[kk]);
+    }
+    var names = [];
+    for(var i=0; i<path.length; i++) names.push(path[i][0] + "→" + path[i][1]);
+    push(13, "找到增广路 " + names.join("，") + "，瓶颈是 " + add, []);
+
+    for(var i=0; i<path.length; i++){
+      var u2 = path[i][0], v3 = path[i][1], k3 = edgeKey(u2, v3);
+      flow[k3] += add;
+      push(16, "边 " + u2 + "→" + v3 + " 流量 +" + add + "，变成 " + flow[k3] + "/" + cap[k3],
+           [{t:"flow", u:u2, v:v3, f:flow[k3]}]);
+    }
+    total += add;
+    push(18, "这一轮推了 " + add + "，累计最大流 " + total, [{t:"mflow", v:total}]);
+  }
+  push(18, "结束，最大流 = " + total, [{t:"mflow", v:total}, {t:"cur", u:0}]);
+  return steps;
+}
+
 function buildSteps(lesson, g, arr){
   if(lesson.kind === "bubble") return simBubble(arr);
   if(lesson.kind === "binary") return simBinary(arr);
@@ -2406,6 +2780,11 @@ function buildSteps(lesson, g, arr){
   if(lesson.kind === "dfs") return simDFS(g);
   if(lesson.kind === "dij") return simDijkstra(g);
   if(lesson.kind === "bell") return simBell(g);
+  if(lesson.kind === "spfa") return simSpfa(g);
+  if(lesson.kind === "prim") return simPrim(g);
+  if(lesson.kind === "bip") return simBip(g);
+  if(lesson.kind === "scc") return simScc(g);
+  if(lesson.kind === "flow") return simFlow(g);
   if(lesson.kind === "kru") return simKruskal(g);
   if(lesson.kind === "topo") return simTopo(g);
   return simBFS(g);
@@ -2428,7 +2807,8 @@ function makeState(lesson, g, arr){
     ptrs: {}, pivot: null, found: null, ranges: [], target: null,
     aux: [], auxHi: -1, auxHi2: -1, query: null,
     mstack: [], ans: new Map(),
-    harr: [], hcur: 0, calls: [], round: 0,
+    harr: [], hcur: 0, calls: [], round: 0, colors: new Map(), lows: new Map(),
+    flow: new Map(), maxflow: 0,
     topArr: [], patArr: [], nxtArr: [], ti: -1, pj: 0, hit: -1, topIsText: false,
     tr: {}, curP: 0, marks: {},
     nodes: [], curNode: 0,
@@ -2450,8 +2830,11 @@ function makeState(lesson, g, arr){
       st.edges.push({u:g.edges[i][0], v:g.edges[i][1], w:g.edges[i][2]});
     }
   }
-  if(lesson.kind === "dij" || lesson.kind === "bell"){
+  if(lesson.kind === "dij" || lesson.kind === "bell" || lesson.kind === "spfa" || lesson.kind === "prim"){
     for(var v=1; v<=g.n; v++) st.dist.set(v, Infinity);
+  }
+  if(lesson.kind === "scc"){
+    for(var v=1; v<=g.n; v++) st.dist.set(v, 0);
   }
   if(lesson.kind === "kru"){
     st.sortedList = g.edges.map(function(e, i){ return {u:e[0], v:e[1], w:e[2], idx:i}; })
@@ -2519,6 +2902,18 @@ function applyEvents(st, evs){
         break;
       case "round":
         st.round = e.i;
+        break;
+      case "color":
+        st.colors.set(e.u, e.c);
+        break;
+      case "low":
+        st.lows.set(e.u, e.v);
+        break;
+      case "flow":
+        st.flow.set(edgeKey(e.u, e.v), e.f);
+        break;
+      case "mflow":
+        st.maxflow = e.v;
         break;
       case "cur":
         st.cur = e.u;
@@ -3098,6 +3493,8 @@ function renderDP(st, lesson){
   svg.innerHTML = out;
 }
 
+var NODE_COLORS = ["#55cdf1", "#f4a261", "#3ddc97", "#c792ea", "#ef6b6b", "#f7d154"];
+
 function renderGraph(st, g, fresh, lesson){
   var svg = document.getElementById("graph");
   svg.setAttribute("viewBox", "0 0 620 380");
@@ -3142,7 +3539,16 @@ function renderGraph(st, g, fresh, lesson){
            + ' L' + (bx - px*4.2) + ' ' + (by - py*4.2) + ' Z"/>';
     }
     var mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-    if(!g.dir || (lesson && lesson.kind === "bell")) out += '<text class="wlabel" x="' + mx + '" y="' + (my - 7) + '" text-anchor="middle">' + e.w + '</text>';
+    var showW = !(lesson && (lesson.kind === "bip" || lesson.kind === "scc"));
+    var dirW = !g.dir || (lesson && (lesson.kind === "bell" || lesson.kind === "flow"));
+    if(showW && dirW){
+      var lbl = e.w;
+      if(lesson && lesson.kind === "flow"){
+        var ff = (st.flow && st.flow.get(edgeKey(e.u, e.v))) || 0;
+        lbl = ff + "/" + e.w;
+      }
+      out += '<text class="wlabel" x="' + mx + '" y="' + (my - 7) + '" text-anchor="middle">' + lbl + '</text>';
+    }
   }
 
   for(var v=1; v<=n; v++){
@@ -3150,11 +3556,18 @@ function renderGraph(st, g, fresh, lesson){
     var current = st.cur === v;
     var ghost = !st.n;
     var settled = st.settled && st.settled.has(v);
+    var cc = st.colors ? st.colors.get(v) : undefined;
+    var cstyle = "";
+    if(cc !== undefined){
+      var col = NODE_COLORS[((cc % NODE_COLORS.length) + NODE_COLORS.length) % NODE_COLORS.length];
+      cstyle = ' style="fill:' + col + ';fill-opacity:.22;stroke:' + col + '"';
+    }
     out += '<g class="node' + (visited ? " visited" : "") + (settled ? " settled" : "") + (current ? " current" : "") + (ghost ? " ghost" : "") + '">'
-        +  '<circle cx="' + X(v) + '" cy="' + Y(v) + '" r="17"/>'
+        +  '<circle cx="' + X(v) + '" cy="' + Y(v) + '" r="17"' + cstyle + '/>'
         +  (CAT.on ? catEars(X(v), Y(v), 17) : '')
         +  '<text x="' + X(v) + '" y="' + Y(v) + '" dy="0.35em" text-anchor="middle">' + v + '</text>';
-    if(lesson && (lesson.kind === "dij" || lesson.kind === "bell")){
+    if(lesson && (lesson.kind === "dij" || lesson.kind === "bell" || lesson.kind === "spfa"
+        || lesson.kind === "prim" || lesson.kind === "scc")){
       var dv = st.dist.get(v);
       var lbl = (dv === Infinity ? "∞" : String(dv));
       var lw = 10 + lbl.length * 6.6;
@@ -3276,6 +3689,108 @@ function bfsHTML(st){
   h += '</div>';
 
   h += '<div class="sub">访问顺序</div><div class="val">' + orderHTML(st) + '</div>';
+  return h;
+}
+
+function bipHTML(st){
+  var n = st.n || 0;
+  var h = '<div class="sub">染色结果</div><div class="grid-chips">';
+  for(var v=1; v<=n; v++){
+    var c = st.colors.get(v);
+    var lab = c === 0 ? "A" : (c === 1 ? "B" : "·");
+    h += '<span class="kv">' + v + '<b>' + lab + '</b></span>';
+  }
+  h += '</div>';
+  h += '<div class="sub">队列</div><div class="grid-chips">';
+  if(!st.queue.length) h += '<span class="kv">空</span>';
+  else for(var i=0;i<st.queue.length;i++) h += '<span class="kv">' + st.queue[i] + '</span>';
+  h += '</div>';
+  h += '<div class="sub">判定规则</div><div class="formula">'
+     + '相邻的两个点必须不同色。<br><br>'
+     + 'BFS 逐层染反色；<br>'
+     + '一旦遇到一条边两端同色，<br>就说明图里有奇环，不是二分图。</div>';
+  return h;
+}
+
+function sccHTML(st){
+  var n = st.n || 0;
+  var h = '<div class="sub">dfn / low</div>';
+  h += '<table class="fstab"><thead><tr><th>点</th><th>dfn</th><th>low</th></tr></thead><tbody>';
+  for(var v=1; v<=n; v++){
+    var d = st.dist.get(v) || 0;
+    var l = st.lows.get(v);
+    h += '<tr><td>' + v + '</td><td>' + (d || "·") + '</td><td>' + (l === undefined ? "·" : l) + '</td></tr>';
+  }
+  h += '</tbody></table>';
+  h += '<div class="sub">栈</div><div class="grid-chips">';
+  if(!st.stack || !st.stack.length) h += '<span class="kv">空</span>';
+  else for(var i=0;i<st.stack.length;i++) h += '<span class="kv">' + st.stack[i] + '</span>';
+  h += '</div>';
+  var comps = {};
+  st.colors.forEach(function(c){ comps[c] = true; });
+  h += '<div class="sub">强连通分量</div><div class="grid-chips">'
+     + '<span class="kv">已找到<b>' + Object.keys(comps).length + '</b></span></div>';
+  h += '<div class="sub">思路</div><div class="formula">'
+     + 'dfn 是访问时间，low 是能绕回的最早时间。<br><br>'
+     + 'low[u] == dfn[u] 时，栈里从 u 往上<br>'
+     + '的这些点属于同一个强连通分量。</div>';
+  return h;
+}
+
+function flowHTML(st){
+  var h = '<div class="sub">最大流</div><div class="grid-chips">'
+        + '<span class="kv">总量<b>' + st.maxflow + '</b></span></div>';
+  h += '<div class="sub">边：流量 / 容量</div><div class="val">';
+  for(var i=0;i<st.edges.length;i++){
+    var e = st.edges[i];
+    var f = st.flow.get(edgeKey(e.u, e.v)) || 0;
+    h += '<span class="chip">' + e.u + '→' + e.v + '　' + f + '/' + e.w + '</span>';
+  }
+  h += '</div>';
+  h += '<div class="sub">思路</div><div class="formula">'
+     + '每次 BFS 找一条还有剩余容量的路径，<br>'
+     + '沿路推「瓶颈」那么多的流，<br>'
+     + '直到源点到汇点不再连通。</div>';
+  return h;
+}
+
+function primHTML(st){
+  var n = st.n || 0;
+  var h = '<div class="sub">key（连到树里的最短边）</div><div class="grid-chips">';
+  for(var v=1; v<=n; v++){
+    var d = st.dist.get(v);
+    h += '<span class="kv">' + v + '<b>' + (d === Infinity ? "∞" : d) + '</b></span>';
+  }
+  h += '</div>';
+  h += '<div class="sub">生成树</div><div class="grid-chips">'
+     + '<span class="kv">边数<b>' + st.mst.size + '</b></span>'
+     + '<span class="kv">总权重<b>' + st.mstWeight + '</b></span></div>';
+  h += '<div class="sub">思路</div><div class="formula">'
+     + '每次从树外挑 key 最小的点，<br>'
+     + '用它的边去更新邻居的 key。<br><br>'
+     + '和 Dijkstra 很像，<br>但 key 是「到树的距离」，<br>不是「到起点的距离」。</div>';
+  return h;
+}
+
+function spfaHTML(st){
+  var n = st.n || 0;
+  var h = '<div class="sub">dist 数组</div><div class="grid-chips">';
+  for(var v=1; v<=n; v++){
+    var d = st.dist.get(v);
+    h += '<span class="kv">' + v + '<b>' + (d === Infinity ? "∞" : d) + '</b></span>';
+  }
+  h += '</div>';
+  h += '<div class="sub">队列</div><div class="grid-chips">';
+  if(!st.queue.length){
+    h += '<span class="kv">空</span>';
+  }else{
+    for(var i=0;i<st.queue.length;i++) h += '<span class="kv">' + st.queue[i] + '</span>';
+  }
+  h += '</div>';
+  h += '<div class="sub">和 Bellman-Ford 的区别</div><div class="formula">'
+     + '只把「刚刚被松弛成功」的点放进队列，<br>'
+     + '不用每轮把所有边都扫一遍。<br><br>'
+     + '队列空了就收敛。<br>平均更快，最坏仍可能退化。</div>';
   return h;
 }
 
@@ -3694,6 +4209,21 @@ function renderStruct(st, lesson, fresh, data){
   }else if(lesson.kind === "bell"){
     title.textContent = "dist 与轮次";
     el.innerHTML = bellHTML(st);
+  }else if(lesson.kind === "spfa"){
+    title.textContent = "dist 与队列";
+    el.innerHTML = spfaHTML(st);
+  }else if(lesson.kind === "prim"){
+    title.textContent = "key 与生成树";
+    el.innerHTML = primHTML(st);
+  }else if(lesson.kind === "bip"){
+    title.textContent = "染色与队列";
+    el.innerHTML = bipHTML(st);
+  }else if(lesson.kind === "scc"){
+    title.textContent = "dfn / low 与栈";
+    el.innerHTML = sccHTML(st);
+  }else if(lesson.kind === "flow"){
+    title.textContent = "流量与容量";
+    el.innerHTML = flowHTML(st);
   }else if(lesson.kind === "kru"){
     title.textContent = "边表与并查集";
     el.innerHTML = kruHTML(st, fresh);
@@ -3893,6 +4423,9 @@ var app = {
   graph: JSON.parse(JSON.stringify(PRESET)),
   dag: JSON.parse(JSON.stringify(DAG_PRESET)),
   neg: JSON.parse(JSON.stringify(NEG_PRESET)),
+  bip: JSON.parse(JSON.stringify(BIP_PRESET)),
+  scc: JSON.parse(JSON.stringify(SCC_PRESET)),
+  flow: JSON.parse(JSON.stringify(FLOW_PRESET)),
   array: null,
   lesson: null,
   steps: [],
@@ -3905,6 +4438,9 @@ function curGraph(){
   if(!app.lesson) return app.graph;
   if(app.lesson.data === "dag") return app.dag;
   if(app.lesson.data === "neg") return app.neg;
+  if(app.lesson.data === "bip") return app.bip;
+  if(app.lesson.data === "scc") return app.scc;
+  if(app.lesson.data === "flow") return app.flow;
   return app.graph;
 }
 
@@ -4132,6 +4668,9 @@ function bind(){
     stopPlay();
     if(app.lesson.data === "dag") app.dag = randomDAG();
     else if(app.lesson.data === "neg") app.neg = randomNeg();
+    else if(app.lesson.data === "bip") app.bip = JSON.parse(JSON.stringify(BIP_PRESET));
+    else if(app.lesson.data === "scc") app.scc = JSON.parse(JSON.stringify(SCC_PRESET));
+    else if(app.lesson.data === "flow") app.flow = randomFlow();
     else if(app.lesson.view === "graph") app.graph = randomGraph();
     else app.array = randomData(app.lesson);
     rebuild(false);
@@ -4140,6 +4679,9 @@ function bind(){
     stopPlay();
     if(app.lesson.data === "dag") app.dag = JSON.parse(JSON.stringify(DAG_PRESET));
     else if(app.lesson.data === "neg") app.neg = JSON.parse(JSON.stringify(NEG_PRESET));
+    else if(app.lesson.data === "bip") app.bip = JSON.parse(JSON.stringify(BIP_PRESET));
+    else if(app.lesson.data === "scc") app.scc = JSON.parse(JSON.stringify(SCC_PRESET));
+    else if(app.lesson.data === "flow") app.flow = JSON.parse(JSON.stringify(FLOW_PRESET));
     else if(app.lesson.view === "graph") app.graph = JSON.parse(JSON.stringify(PRESET));
     else app.array = defaultData(app.lesson);
     rebuild(false);
@@ -4546,6 +5088,11 @@ var CONCEPT = {
   topo: { q:"拓扑排序最后输出的点数少于 n，说明？", opts:["图里有环","图不连通","有孤立点"], a:"图里有环", why:"环上的点入度永远减不到 0。" },
   dij: { q:"Dijkstra 不能处理哪种图？", opts:["有负权边","有环","不连通"], a:"有负权边", why:"它假设已经确定的点不会再被更短的路径更新。" },
   bell: { q:"Bellman-Ford 最多需要多少轮？", opts:["n-1 轮","n 轮","log n 轮"], a:"n-1 轮", why:"最短路径最多 n-1 条边，每轮至少能确定一条。" },
+  spfa: { q:"SPFA 靠什么判断已经收敛？", opts:["队列为空","轮数到 n","dist 不再变化一次"], a:"队列为空", why:"只有被松弛成功的点才会再次入队，队列空就没有可松弛的了。" },
+  prim: { q:"Prim 里的 key[v] 表示什么？", opts:["v 到生成树的最短边","v 到起点的最短距离","v 的入度"], a:"v 到生成树的最短边", why:"这是它和 Dijkstra 最关键的区别。" },
+  bip: { q:"二分图等价于下面哪一条？", opts:["图中没有奇环","图中没有环","图是连通的"], a:"图中没有奇环", why:"奇环会让一个点被要求同时染两种颜色。" },
+  scc: { q:"Tarjan 里 low[u] == dfn[u] 说明什么？", opts:["u 是某个强连通分量的根","u 没有出边","u 在环上"], a:"u 是某个强连通分量的根", why:"此时栈里从 u 往上的点构成一个完整分量。" },
+  flow: { q:"增广路的「瓶颈」指的是？", opts:["路径上剩余容量的最小值","路径长度","源点的容量"], a:"路径上剩余容量的最小值", why:"推更多的流就会超过某条边的容量。" },
   kru: { q:"Kruskal 的 O(m log m) 主要来自哪一步？", opts:["边排序","并查集查询","建图"], a:"边排序", why:"并查集部分接近 O(m α(n))。" },
   memo: { q:"记忆化搜索解决的是哪类问题？", opts:["重复子问题","图论最短路","字符串匹配"], a:"重复子问题", why:"把算过的结果存表，下次直接取。" },
   idp: { q:"区间 DP 的枚举顺序是？", opts:["按区间长度从小到大","按左端点从左到右","任意顺序"], a:"按区间长度从小到大", why:"长区间的答案依赖短区间，必须先算短的。" },
@@ -4638,7 +5185,22 @@ function resultQuiz(){
     return { q:"所有石子合并成一堆，最小代价 dp[0][" + (last.dpCols - 1) + "] 是多少？",
              opts:mkOpts(ansI, flatI), ans:ansI, why:"这就是答案。" };
   }
-  if(kind === "bell"){
+  if(kind === "prim"){
+    return { q:"生成树的总权重是多少？", opts:mkOpts(last.mstWeight, [8,10,11,12,13,15,16]), ans:last.mstWeight,
+             why:"把每次选的边权加起来。" };
+  }
+  if(kind === "flow"){
+    return { q:"最大流是多少？", opts:mkOpts(last.maxflow, [3,4,5,6,7]), ans:last.maxflow,
+             why:"所有增广路推的流加起来。" };
+  }
+  if(kind === "scc"){
+    var comps = {};
+    last.colors.forEach(function(c){ comps[c] = true; });
+    var cnt = Object.keys(comps).length;
+    return { q:"这张图一共有几个强连通分量？", opts:mkOpts(cnt, [1,2,3,4,5]), ans:cnt,
+             why:"同色的点属于同一个分量。" };
+  }
+  if(kind === "bell" || kind === "spfa"){
     var poolB = [];
     last.dist.forEach(function(v){ poolB.push(v); });
     var ansB = last.dist.get(last.n);
